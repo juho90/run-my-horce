@@ -76,13 +76,11 @@ export class BettingService {
       const winnerTotal = winnerBets.reduce((sum, bet) => sum + bet.amount, 0);
       if (winnerTotal === 0) {
         console.warn(`🏁 레이스 ${raceId}: 당첨자 없음`);
-        // 혹시 모를 보정이나 운영자 대응 로직 여기에
       } else {
         for (const bet of winnerBets) {
           const payout = Math.floor(
             (bet.amount / winnerTotal) * totalBetAmount,
           );
-          // 기존 인벤토리 확인
           const existing = await inventoryRepo.findOne({
             where: { discordId: bet.discordId, itemId: ITEM_IDS.COIN },
           });

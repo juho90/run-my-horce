@@ -8,8 +8,8 @@ import {
 
 @Entity('races')
 export class RaceEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ default: 'pending' }) // 'started', 'stopped' 등
   state: string;
