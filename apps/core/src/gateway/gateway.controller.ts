@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
+import { BettingService } from 'src/betting/betting.service';
 import { HorseService } from 'src/horse/horse.service';
 import { RaceService } from 'src/race/race.service';
 
@@ -6,16 +7,22 @@ import { RaceService } from 'src/race/race.service';
 export class GatewayController {
   constructor(
     private readonly horseService: HorseService,
+    private readonly bettingService: BettingService,
     private readonly raceService: RaceService,
   ) {}
 
   @Get('horses')
-  findAll() {
+  findAllHorses() {
     return this.horseService.findAll();
   }
 
+  @Get('bets')
+  getAllBets(@Query('raceId') raceId: string) {
+    return this.bettingService.findBetsByRace(raceId);
+  }
+
   @Get('race/latest')
-  async getLatestRace() {
+  getLatestRace() {
     return this.raceService.getLatestRace() || {};
   }
 }

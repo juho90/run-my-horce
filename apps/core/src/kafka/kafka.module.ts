@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { HorseModule } from '../horse/horse.module';
-import { RaceModule } from '../race/race.module';
+import { BettingModule } from 'src/betting/betting.module';
+import { HorseModule } from 'src/horse/horse.module';
+import { RaceModule } from 'src/race/race.module';
 import { KafkaController } from './kafka.controller';
 
 @Module({
-  imports: [HorseModule, RaceModule],
+  imports: [HorseModule, RaceModule, BettingModule],
   controllers: [KafkaController],
 })
 export class KafkaModule {}

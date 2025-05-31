@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
-@Entity('bets')
-export class Bet {
+@Entity('bettings')
+export class BettingEntity {
   @PrimaryColumn()
   discordId: string;
 

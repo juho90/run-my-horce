@@ -1,3 +1,5 @@
+import { HorseEntity } from 'src/horse/entities/horse.entity';
+import { RaceEntity } from 'src/race/entities/race.entity';
 import {
   Column,
   Entity,
@@ -5,8 +7,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { HorseEntity } from '../horse/entities/horse.entity';
-import { RaceEntity } from '../race/entities/race.entity';
 
 @Entity('race_entries')
 export class RaceEntryEntity {

@@ -3,24 +3,27 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Inventory } from 'src/inventory/entities/inventory.entity';
 import { ITEM_IDS } from 'src/inventory/inventory.constants';
 import { DataSource, Repository } from 'typeorm';
-import { Bet } from './entities/bet.entity';
+import { BettingEntity } from './entities/betting.entity';
 
 @Injectable()
 export class BettingService {
   constructor(
-    @InjectRepository(Bet)
-    private readonly betRepo: Repository<Bet>,
+    @InjectRepository(BettingEntity)
+    private readonly bettingRepo: Repository<BettingEntity>,
 
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
 
-  async getBetsByRace(raceId: string): Promise<Bet[]> {
-    return this.betRepo.find({ where: { raceId } });
+  async findBetsByRace(raceId: string): Promise<BettingEntity[]> {
+    return this.bettingRepo.find({ where: { raceId } });
   }
 
-  async getBetsByHorse(raceId: string, horseId: string): Promise<Bet[]> {
-    return this.betRepo.find({ where: { raceId, horseId } });
+  async findBetsByHorse(
+    raceId: string,
+    horseId: string,
+  ): Promise<BettingEntity[]> {
+    return this.bettingRepo.find({ where: { raceId, horseId } });
   }
 
   async placeBet(
@@ -30,7 +33,7 @@ export class BettingService {
     amount: number,
   ): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
-      const betRepository = manager.getRepository(Bet);
+      const betRepository = manager.getRepository(BettingEntity);
       const inventoryRepository = manager.getRepository(Inventory);
       const existing = await betRepository.findOne({
         where: { discordId, raceId },
@@ -65,7 +68,7 @@ export class BettingService {
 
   async payoutBet(raceId: string, winnerHorseId: string): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
-      const betRepo = manager.getRepository(Bet);
+      const betRepo = manager.getRepository(BettingEntity);
       const inventoryRepo = manager.getRepository(Inventory);
       const allBets = await betRepo.find({ where: { raceId, settled: false } });
       if (allBets.length === 0) {
@@ -113,7 +116,7 @@ export class BettingService {
   }
 
   async markAsSettled(raceId: string): Promise<void> {
-    await this.betRepo
+    await this.bettingRepo
       .createQueryBuilder()
       .update()
       .set({ settled: true })
