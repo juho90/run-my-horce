@@ -13,7 +13,7 @@ export class KafkaController {
 
   @MessagePattern(KAFKA_TOPICS.CREATE_HORSE)
   handleCreateHorse(@Payload() message: any) {
-    return this.horseService.create(message.value);
+    return this.horseService.create(message);
   }
 
   @MessagePattern(KAFKA_TOPICS.START_RACE)

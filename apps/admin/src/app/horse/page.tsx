@@ -20,7 +20,7 @@ export default function HorsesPage() {
   });
 
   const fetchHorses = () => {
-    fetch("/api/horses")
+    fetch("/api/horse")
       .then((res) => res.json())
       .then(setHorses)
       .catch((err) => console.error("Failed to fetch horses:", err));

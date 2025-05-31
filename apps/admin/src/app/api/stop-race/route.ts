@@ -1,12 +1,12 @@
+import { producer } from "@/lib/kafka/producer";
 import { KAFKA_TOPICS } from "@/lib/kafka/topic";
-import { producer } from "@lib/kafka/producer";
 import { NextResponse } from "next/server";
 
 export async function POST() {
   try {
     await producer.connect();
     await producer.send({
-      topic: KAFKA_TOPICS.START_RACE,
+      topic: KAFKA_TOPICS.STOP_RACE,
       messages: [{ value: JSON.stringify({}) }],
     });
     return NextResponse.json({ ok: true });

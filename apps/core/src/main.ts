@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
+
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,7 +13,7 @@ async function bootstrap() {
     transport: Transport.KAFKA,
     options: {
       client: {
-        clientId: 'horse-core',
+        clientId: process.env.KAFKA_CLIENT_ID || 'horse-core',
         brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
       },
       consumer: {

@@ -11,12 +11,18 @@ export class RaceEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ default: 'waiting' })
-  state: 'waiting' | 'started' | 'finished';
+  @Column({ default: 'pending' }) // 'started', 'stopped' 등
+  state: string;
+
+  @Column({ type: 'datetime', nullable: true })
+  startedAt: Date;
+
+  @Column({ type: 'datetime', nullable: true })
+  stoppedAt: Date;
 
   @CreateDateColumn()
-  started_at: Date;
+  createdAt: Date;
 
-  @UpdateDateColumn({ nullable: true })
-  ended_at: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

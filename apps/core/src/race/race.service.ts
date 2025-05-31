@@ -13,22 +13,25 @@ export class RaceService {
   async startRace(): Promise<RaceEntity> {
     const race = this.raceRepo.create({
       state: 'started',
+      startedAt: new Date(),
     });
     return this.raceRepo.save(race);
   }
 
   async stopRace(): Promise<RaceEntity | null> {
-    const race = await this.raceRepo.findOne({
-      where: { state: 'started' },
-      order: { started_at: 'DESC' },
-    });
-
+    const race = await this.getLatestRace();
     if (!race) {
       return null;
     }
-
     race.state = 'finished';
-    race.ended_at = new Date();
+    race.stoppedAt = new Date();
     return this.raceRepo.save(race);
+  }
+
+  async getLatestRace(): Promise<RaceEntity | null> {
+    return this.raceRepo.findOne({
+      where: {},
+      order: { id: 'DESC' },
+    });
   }
 }
