@@ -29,9 +29,9 @@ services:
       context: ./apps/core
     container_name: horse-core
     ports:
-      - "3001:3001"
+      - "8000:3000"
     environment:
-      KAFKA_BROKERS: kafka:29092
+      KAFKA_BROKER: kafka:29092
     depends_on:
       - kafka
 
@@ -40,8 +40,8 @@ services:
       context: ./apps/admin
     container_name: horse-admin
     ports:
-      - "3000:3000"
+      - "8080:3000"
     environment:
-      NEXT_PUBLIC_CORE_API: http://horse-core:3001
+      NEXT_PUBLIC_CORE_API: http://horse-core:8000/api
     depends_on:
       - horse-core

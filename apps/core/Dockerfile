@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
+RUN npm install -g @nestjs/cli
 RUN npm install
-RUN npm run build
 
-CMD ["node", "dist/main.js"]
+CMD ["npm", "run", "start:dev"]
