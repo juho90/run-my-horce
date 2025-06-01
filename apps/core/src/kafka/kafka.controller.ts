@@ -4,9 +4,10 @@ import { BettingService } from 'src/betting/betting.service';
 import { HorseService } from 'src/horse/horse.service';
 import { ITEM_IDS } from 'src/inventory/inventory.constants';
 import { InventoryService } from 'src/inventory/inventory.service';
+import { RaceResultService } from 'src/race-result/race-result.service';
 import { RaceService } from 'src/race/race.service';
 import { KAFKA_TOPICS } from './kafka.constants';
-import { Betting, Horse } from './kafka.interface';
+import { Betting, Horse, RaceResult } from './kafka.interface';
 
 @Controller()
 export class KafkaController {
@@ -15,6 +16,7 @@ export class KafkaController {
     private readonly raceService: RaceService,
     private readonly bettingService: BettingService,
     private readonly inventoryService: InventoryService,
+    private readonly raceResultService: RaceResultService,
   ) {}
 
   @MessagePattern(KAFKA_TOPICS.CREATE_HORSE)
@@ -56,6 +58,19 @@ export class KafkaController {
     }
   }
 
+  @MessagePattern(KAFKA_TOPICS.CREATE_RACE_RESULT)
+  async handleCreateRaceResult(@Payload() message: RaceResult) {
+    try {
+      return await this.raceResultService.createResult(message);
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to create race result',
+        error: error.message,
+      };
+    }
+  }
+
   @MessagePattern(KAFKA_TOPICS.CREATE_BET)
   async handleCreateBet(@Payload() message: Betting) {
     try {
@@ -66,12 +81,7 @@ export class KafkaController {
           message.amount,
         );
       }
-      return this.bettingService.placeBet(
-        message.discordId,
-        message.raceId,
-        message.horseId,
-        message.amount,
-      );
+      return await this.bettingService.placeBet(message);
     } catch (error) {
       return {
         status: 'error',

@@ -9,7 +9,7 @@ export async function GET() {
     if (text) {
       return NextResponse.json(JSON.parse(text));
     } else {
-      return NextResponse.json({});
+      return NextResponse.json(null);
     }
   } catch (e) {
     console.error("API error:", e);

@@ -15,23 +15,23 @@ export class BettingService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findBetsByRace(raceId: string): Promise<BettingEntity[]> {
+  async findBetsByRace(raceId: number): Promise<BettingEntity[]> {
     return this.bettingRepo.find({ where: { raceId } });
   }
 
   async findBetsByHorse(
-    raceId: string,
-    horseId: string,
+    raceId: number,
+    horseId: number,
   ): Promise<BettingEntity[]> {
     return this.bettingRepo.find({ where: { raceId, horseId } });
   }
 
-  async placeBet(
-    discordId: string,
-    raceId: string,
-    horseId: string,
-    amount: number,
-  ): Promise<void> {
+  async placeBet({
+    discordId,
+    raceId,
+    horseId,
+    amount,
+  }: Partial<BettingEntity>): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const betRepository = manager.getRepository(BettingEntity);
       const inventoryRepository = manager.getRepository(InventoryEntity);
@@ -44,7 +44,7 @@ export class BettingService {
       const item = await inventoryRepository.findOne({
         where: { discordId, itemId: ITEM_IDS.COIN },
       });
-      if (!item || item.quantity < amount) {
+      if (!item || item.quantity < amount!) {
         throw new Error('코인이 부족합니다.');
       }
       await inventoryRepository
@@ -66,7 +66,7 @@ export class BettingService {
     });
   }
 
-  async payoutBet(raceId: string, winnerHorseId: string): Promise<void> {
+  async payoutBet(raceId: number, winnerHorseId: number): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const betRepo = manager.getRepository(BettingEntity);
       const inventoryRepo = manager.getRepository(InventoryEntity);

@@ -6,10 +6,10 @@ export class BettingEntity {
   discordId: string;
 
   @PrimaryColumn()
-  raceId: string;
+  raceId: number;
 
   @Column()
-  horseId: string;
+  horseId: number;
 
   @Column('int')
   amount: number;

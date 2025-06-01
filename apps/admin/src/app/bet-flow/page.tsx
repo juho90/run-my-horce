@@ -22,10 +22,17 @@ type BetSummary = {
   totalAmount: number;
 };
 
+type RaceResult = {
+  raceId: number;
+  winnerHorseId: number;
+  ranking: number[];
+};
+
 export default function BetFlowTestPage() {
   const [log, setLog] = useState<string[]>([]);
   const [horses, setHorses] = useState<Horse[]>([]);
   const [race, setRace] = useState<Race | null>(null);
+  const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
   const [betSummary, setBetSummary] = useState<BetSummary[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -52,7 +59,7 @@ export default function BetFlowTestPage() {
     const res = await fetch("/api/get-race");
     if (res.ok) {
       const data = await res.json();
-      if (data && data.id) {
+      if (data) {
         setRace(data);
         appendLog("레이스 불러오기 성공");
       } else {
@@ -65,9 +72,26 @@ export default function BetFlowTestPage() {
     }
   };
 
+  // 결과 조회
+  const fetchRaceResult = async () => {
+    if (race === null) {
+      setRaceResult(null);
+      return;
+    }
+    const res = await fetch(`/api/get-race-result?raceId=${race.id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setRaceResult(data);
+      appendLog("레이스 결과 조회 성공");
+    } else {
+      setRaceResult(null);
+      appendLog("레이스 결과 조회 실패");
+    }
+  };
+
   // 베팅 요약 정보 조회
   const fetchBetSummary = async () => {
-    if (!race) {
+    if (race === null) {
       setBetSummary([]);
       return;
     }
@@ -113,9 +137,57 @@ export default function BetFlowTestPage() {
     setLoading(false);
   };
 
+  const startRace = async () => {
+    appendLog("레이스 시작 요청");
+    const res = await fetch("/api/start-race", { method: "POST" });
+    if (res.ok) {
+      appendLog("레이스 시작됨");
+      await fetchRace();
+      await fetchBetSummary();
+    } else {
+      appendLog("레이스 시작 실패");
+    }
+  };
+
+  const stopRace = async () => {
+    appendLog("레이스 정지 요청");
+    const res = await fetch("/api/stop-race", { method: "POST" });
+    if (res.ok) {
+      appendLog("레이스 정지됨");
+      fetchRace();
+    } else {
+      appendLog("레이스 정지 실패");
+    }
+  };
+
+  // 결과 생성
+  const createRaceResult = async () => {
+    if (race === null) {
+      return;
+    }
+    const shuffled = [...horses].sort(() => Math.random() - 0.5);
+    const winnerHorseId = shuffled[0].id;
+    const ranking = shuffled.map((h) => h.id);
+    const res = await fetch("/api/create-race-result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        raceId: race.id,
+        winnerHorseId,
+        ranking,
+      }),
+    });
+    if (res.ok) {
+      appendLog("레이스 결과 생성 완료");
+      await fetchRaceResult();
+    } else {
+      appendLog("레이스 결과 생성 실패");
+    }
+  };
+
   // 유저 베팅 데이터 100개 생성
   const createUserBets = async () => {
-    if (!race) {
+    if (race === null) {
       return;
     }
     appendLog("유저 베팅 데이터 100개 생성 시작");
@@ -144,29 +216,6 @@ export default function BetFlowTestPage() {
     setLoading(false);
   };
 
-  const startRace = async () => {
-    appendLog("레이스 시작 요청");
-    const res = await fetch("/api/start-race", { method: "POST" });
-    if (res.ok) {
-      appendLog("레이스 시작됨");
-      await fetchRace();
-      await fetchBetSummary();
-    } else {
-      appendLog("레이스 시작 실패");
-    }
-  };
-
-  const stopRace = async () => {
-    appendLog("레이스 정지 요청");
-    const res = await fetch("/api/stop-race", { method: "POST" });
-    if (res.ok) {
-      appendLog("레이스 정지됨");
-      fetchRace();
-    } else {
-      appendLog("레이스 정지 실패");
-    }
-  };
-
   const settleRace = async () => {
     appendLog("정산 요청");
     const res = await fetch("/api/settle", { method: "POST" });
@@ -186,8 +235,10 @@ export default function BetFlowTestPage() {
   useEffect(() => {
     if (race) {
       fetchBetSummary();
+      fetchRaceResult();
     } else {
       setBetSummary([]);
+      setRaceResult(null);
     }
   }, [race]);
 
@@ -232,26 +283,46 @@ export default function BetFlowTestPage() {
         )}
       </div>
       <div style={{ marginBottom: 16 }}>
-        <button
-          onClick={createUserBets}
-          disabled={loading || !race}
-          style={{ opacity: !race ? 0.5 : 1 }}
-        >
-          {loading ? "생성 중..." : "유저 베팅 데이터 100개 생성"}
-        </button>
-        <button onClick={startRace} style={{ marginLeft: 8 }}>
-          레이스 시작
-        </button>
-        <button onClick={stopRace} style={{ marginLeft: 8 }}>
-          레이스 정지
-        </button>
-        <button onClick={settleRace} style={{ marginLeft: 8 }}>
-          정산
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={startRace}>레이스 시작</button>
+          <button onClick={stopRace}>레이스 정지</button>
+          <button
+            onClick={createRaceResult}
+            disabled={race === null || raceResult !== null}
+          >
+            레이스 결과 생성
+          </button>
+          <button
+            onClick={createUserBets}
+            disabled={loading || race === null || betSummary.length > 0}
+            style={{ opacity: race === null ? 0.5 : 1 }}
+          >
+            {loading ? "생성 중..." : "유저 베팅 데이터 100개 생성"}
+          </button>
+          <button
+            onClick={settleRace}
+            disabled={loading || race === null || betSummary.length === 0}
+          >
+            정산
+          </button>
+        </div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <h3>레이스 결과</h3>
+        {race === null ? (
+          <p>레이스가 없으면 결과를 볼 수 없습니다.</p>
+        ) : raceResult === null ? (
+          <p>레이스 결과가 없습니다.</p>
+        ) : (
+          <div>
+            <p>우승마: {raceResult.winnerHorseId}</p>
+            <p>순위: {raceResult.ranking?.join(", ")}</p>
+          </div>
+        )}
       </div>
       <div style={{ marginBottom: 16 }}>
         <h3>베팅 요약</h3>
-        {!race ? (
+        {race === null ? (
           <p>레이스가 없으면 베팅 정보를 볼 수 없습니다.</p>
         ) : betSummary.length === 0 ? (
           <p>베팅 데이터가 없습니다.</p>

@@ -7,7 +7,13 @@ export interface Horse {
 
 export interface Betting {
   discordId: string;
-  raceId: string;
-  horseId: string;
+  raceId: number;
+  horseId: number;
   amount: number;
+}
+
+export interface RaceResult {
+  raceId: number;
+  winnerHorseId: number;
+  ranking: number[];
 }
