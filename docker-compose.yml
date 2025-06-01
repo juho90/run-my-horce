@@ -42,6 +42,7 @@ services:
     ports:
       - "8080:3000"
     environment:
-      NEXT_PUBLIC_CORE_API: http://horse-core:8000/api
+      CORE_API: http://horse-core:3000/api
+      KAFKA_BROKER: kafka:29092
     depends_on:
       - horse-core
