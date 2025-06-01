@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('inventories')
-export class Inventory {
+export class InventoryEntity {
   @PrimaryColumn()
   discordId: string;
 

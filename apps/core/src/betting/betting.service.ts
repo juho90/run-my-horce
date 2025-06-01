@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { Inventory } from 'src/inventory/entities/inventory.entity';
+import { InventoryEntity } from 'src/inventory/entities/inventory.entity';
 import { ITEM_IDS } from 'src/inventory/inventory.constants';
 import { DataSource, Repository } from 'typeorm';
 import { BettingEntity } from './entities/betting.entity';
@@ -34,7 +34,7 @@ export class BettingService {
   ): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const betRepository = manager.getRepository(BettingEntity);
-      const inventoryRepository = manager.getRepository(Inventory);
+      const inventoryRepository = manager.getRepository(InventoryEntity);
       const existing = await betRepository.findOne({
         where: { discordId, raceId },
       });
@@ -69,7 +69,7 @@ export class BettingService {
   async payoutBet(raceId: string, winnerHorseId: string): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const betRepo = manager.getRepository(BettingEntity);
-      const inventoryRepo = manager.getRepository(Inventory);
+      const inventoryRepo = manager.getRepository(InventoryEntity);
       const allBets = await betRepo.find({ where: { raceId, settled: false } });
       if (allBets.length === 0) {
         return;
