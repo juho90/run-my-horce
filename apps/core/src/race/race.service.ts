@@ -10,6 +10,13 @@ export class RaceService {
     private readonly raceRepo: Repository<RaceEntity>,
   ) {}
 
+  async findLatestRace(): Promise<RaceEntity | null> {
+    return this.raceRepo.findOne({
+      where: {},
+      order: { id: 'DESC' },
+    });
+  }
+
   async startRace(): Promise<RaceEntity> {
     const race = this.raceRepo.create({
       state: 'started',
@@ -19,7 +26,7 @@ export class RaceService {
   }
 
   async stopRace(): Promise<RaceEntity | null> {
-    const race = await this.getLatestRace();
+    const race = await this.findLatestRace();
     if (!race) {
       return null;
     }
@@ -28,10 +35,13 @@ export class RaceService {
     return this.raceRepo.save(race);
   }
 
-  async getLatestRace(): Promise<RaceEntity | null> {
-    return this.raceRepo.findOne({
-      where: {},
-      order: { id: 'DESC' },
-    });
+  async settleRace(raceId: number): Promise<RaceEntity | null> {
+    const race = await this.raceRepo.findOne({ where: { id: raceId } });
+    if (!race) {
+      return null;
+    }
+    race.settled = true;
+    race.state = 'settled'; // 필요시 상태 문자열도 변경
+    return this.raceRepo.save(race);
   }
 }

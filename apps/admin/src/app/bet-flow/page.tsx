@@ -13,6 +13,7 @@ type Horse = {
 type Race = {
   id: number;
   state: string;
+  settled: boolean;
   startedAt?: string;
   stoppedAt?: string;
 };
@@ -160,28 +161,14 @@ export default function BetFlowTestPage() {
     }
   };
 
-  // 결과 생성
-  const createRaceResult = async () => {
-    if (race === null) {
-      return;
-    }
-    const shuffled = [...horses].sort(() => Math.random() - 0.5);
-    const winnerHorseId = shuffled[0].id;
-    const ranking = shuffled.map((h) => h.id);
-    const res = await fetch("/api/create-race-result", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        raceId: race.id,
-        winnerHorseId,
-        ranking,
-      }),
-    });
+  const settleRace = async () => {
+    appendLog("정산 요청");
+    const res = await fetch("/api/settle-race", { method: "POST" });
     if (res.ok) {
-      appendLog("레이스 결과 생성 완료");
-      await fetchRaceResult();
+      appendLog("정산 완료");
+      fetchRace();
     } else {
-      appendLog("레이스 결과 생성 실패");
+      appendLog("정산 실패");
     }
   };
 
@@ -216,13 +203,28 @@ export default function BetFlowTestPage() {
     setLoading(false);
   };
 
-  const settleRace = async () => {
-    appendLog("정산 요청");
-    const res = await fetch("/api/settle", { method: "POST" });
+  // 결과 생성
+  const createRaceResult = async () => {
+    if (race === null) {
+      return;
+    }
+    const shuffled = [...horses].sort(() => Math.random() - 0.5);
+    const winnerHorseId = shuffled[0].id;
+    const ranking = shuffled.map((h) => h.id);
+    const res = await fetch("/api/create-race-result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        raceId: race.id,
+        winnerHorseId,
+        ranking,
+      }),
+    });
     if (res.ok) {
-      appendLog("정산 완료");
+      appendLog("레이스 결과 생성 완료");
+      await fetchRaceResult();
     } else {
-      appendLog("정산 실패");
+      appendLog("레이스 결과 생성 실패");
     }
   };
 
@@ -301,7 +303,12 @@ export default function BetFlowTestPage() {
           </button>
           <button
             onClick={settleRace}
-            disabled={loading || race === null || betSummary.length === 0}
+            disabled={
+              loading ||
+              race === null ||
+              race.state !== "finished" ||
+              betSummary.length === 0
+            }
           >
             정산
           </button>

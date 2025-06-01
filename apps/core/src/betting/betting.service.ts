@@ -66,7 +66,7 @@ export class BettingService {
     });
   }
 
-  async payoutBet(raceId: number, winnerHorseId: number): Promise<void> {
+  async settleBet(raceId: number, winnerHorseId: number): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const betRepo = manager.getRepository(BettingEntity);
       const inventoryRepo = manager.getRepository(InventoryEntity);
@@ -113,14 +113,5 @@ export class BettingService {
         .where('raceId = :raceId', { raceId })
         .execute();
     });
-  }
-
-  async markAsSettled(raceId: string): Promise<void> {
-    await this.bettingRepo
-      .createQueryBuilder()
-      .update()
-      .set({ settled: true })
-      .where('raceId = :raceId', { raceId })
-      .execute();
   }
 }

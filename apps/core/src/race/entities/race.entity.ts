@@ -11,7 +11,7 @@ export class RaceEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: 'pending' }) // 'started', 'stopped' 등
+  @Column({ default: 'pending' })
   state: string;
 
   @Column({ type: 'datetime', nullable: true })
@@ -19,6 +19,9 @@ export class RaceEntity {
 
   @Column({ type: 'datetime', nullable: true })
   stoppedAt: Date;
+
+  @Column({ default: false })
+  settled: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

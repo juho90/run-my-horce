@@ -58,6 +58,33 @@ export class KafkaController {
     }
   }
 
+  @MessagePattern(KAFKA_TOPICS.SETTLE_RACE)
+  async handleSettleRace() {
+    try {
+      const race = await this.raceService.findLatestRace();
+      if (!race || race.state !== 'finished' || race.settled) {
+        throw new Error(
+          `Bad request race state ${race?.state} settled ${race?.settled}`,
+        );
+      }
+      const raceResult = await this.raceResultService.findResultByRaceId(
+        race.id,
+      );
+      if (!raceResult) {
+        throw new Error('Not found race result');
+      }
+      await this.bettingService.settleBet(race.id, raceResult.winnerHorseId);
+      await this.raceService.settleRace(race.id);
+      return { ok: true };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to settle race',
+        error: error.message,
+      };
+    }
+  }
+
   @MessagePattern(KAFKA_TOPICS.CREATE_RACE_RESULT)
   async handleCreateRaceResult(@Payload() message: RaceResult) {
     try {

@@ -25,7 +25,7 @@ export class GatewayController {
 
   @Get('race/latest')
   getLatestRace() {
-    return this.raceService.getLatestRace() || {};
+    return this.raceService.findLatestRace() || {};
   }
 
   @Get('race-result')
