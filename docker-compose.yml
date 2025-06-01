@@ -26,7 +26,7 @@ services:
 
   horse-core:
     build:
-      context: ./apps/core
+      context: ./core
     container_name: horse-core
     ports:
       - "8000:3000"
@@ -37,7 +37,7 @@ services:
 
   horse-admin:
     build:
-      context: ./apps/admin
+      context: ./admin
     container_name: horse-admin
     ports:
       - "8080:3000"
