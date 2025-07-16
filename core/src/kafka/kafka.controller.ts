@@ -1,19 +1,21 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { BettingService } from 'src/betting/betting.service';
-import { HorseService } from 'src/horse/horse.service';
 import { ITEM_IDS } from 'src/inventory/inventory.constants';
 import { InventoryService } from 'src/inventory/inventory.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
+import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
+import { TrackService } from 'src/race/track.service';
 import { KAFKA_TOPICS } from './kafka.constants';
 import { Betting, RaceResult } from './kafka.interface';
 
 @Controller()
 export class KafkaController {
   constructor(
-    private readonly horseService: HorseService,
     private readonly raceService: RaceService,
+    private readonly trackService: TrackService,
+    private readonly horseService: HorseService,
     private readonly bettingService: BettingService,
     private readonly inventoryService: InventoryService,
     private readonly raceResultService: RaceResultService,
@@ -23,6 +25,7 @@ export class KafkaController {
   async handleStartRace() {
     try {
       const race = await this.raceService.startRace();
+      await this.trackService.createTrack(race.raceId);
       await this.horseService.createByRaceId(race.raceId);
       return race;
     } catch (error) {

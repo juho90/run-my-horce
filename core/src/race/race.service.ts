@@ -1,7 +1,5 @@
-import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import Redis from 'ioredis';
 import { Repository } from 'typeorm';
 import { RaceEntity } from './entities/race.entity';
 
@@ -10,8 +8,6 @@ export class RaceService {
   constructor(
     @InjectRepository(RaceEntity)
     private readonly raceRepo: Repository<RaceEntity>,
-    @InjectRedis()
-    private readonly redis: Redis,
   ) {}
 
   async findLatestRace(): Promise<RaceEntity | null> {
@@ -45,7 +41,7 @@ export class RaceService {
       return null;
     }
     race.settled = true;
-    race.state = 'settled'; // 필요시 상태 문자열도 변경
+    race.state = 'settled';
     return this.raceRepo.save(race);
   }
 }

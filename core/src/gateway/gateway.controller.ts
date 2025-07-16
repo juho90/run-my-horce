@@ -1,17 +1,29 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { BettingService } from 'src/betting/betting.service';
-import { HorseService } from 'src/horse/horse.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
+import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
+import { TrackService } from 'src/race/track.service';
 
 @Controller('api')
 export class GatewayController {
   constructor(
-    private readonly horseService: HorseService,
     private readonly bettingService: BettingService,
+    private readonly horseService: HorseService,
+    private readonly trackService: TrackService,
     private readonly raceService: RaceService,
     private readonly raceResultService: RaceResultService,
   ) {}
+
+  @Get('race/latest')
+  getLatestRace() {
+    return this.raceService.findLatestRace() || {};
+  }
+
+  @Get('race-result/:raceId')
+  getRaceResult(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.raceResultService.findResultByRaceId(raceId);
+  }
 
   @Get('horses')
   findAllHorses() {
@@ -23,18 +35,13 @@ export class GatewayController {
     return this.horseService.findAllByRaceId(raceId);
   }
 
+  @Get('track/:raceId')
+  findTrackByRaceId(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.trackService.findTrack(raceId);
+  }
+
   @Get('bets/:raceId')
   getAllBets(@Param('raceId', ParseIntPipe) raceId: number) {
     return this.bettingService.findBetsByRace(raceId);
-  }
-
-  @Get('race/latest')
-  getLatestRace() {
-    return this.raceService.findLatestRace() || {};
-  }
-
-  @Get('race-result/:raceId')
-  getRaceResult(@Param('raceId', ParseIntPipe) raceId: number) {
-    return this.raceResultService.findResultByRaceId(raceId);
   }
 }

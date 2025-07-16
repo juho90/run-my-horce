@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createRandomHorse } from 'engine/src/horse';
 import { Repository } from 'typeorm';
-import { createRandomHorse } from '../../engine/src/horse';
 import { HorseEntity } from './entities/horse.entity';
 
 @Injectable()
