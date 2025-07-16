@@ -7,7 +7,7 @@ import { InventoryService } from 'src/inventory/inventory.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
 import { RaceService } from 'src/race/race.service';
 import { KAFKA_TOPICS } from './kafka.constants';
-import { Betting, Horse, RaceResult } from './kafka.interface';
+import { Betting, RaceResult } from './kafka.interface';
 
 @Controller()
 export class KafkaController {
@@ -19,23 +19,12 @@ export class KafkaController {
     private readonly raceResultService: RaceResultService,
   ) {}
 
-  @MessagePattern(KAFKA_TOPICS.CREATE_HORSE)
-  async handleCreateHorse(@Payload() message: Horse) {
-    try {
-      return await this.horseService.create(message);
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to create horse',
-        error: error.message,
-      };
-    }
-  }
-
   @MessagePattern(KAFKA_TOPICS.START_RACE)
   async handleStartRace() {
     try {
-      return await this.raceService.startRace();
+      const race = await this.raceService.startRace();
+      await this.horseService.createByRaceId(race.raceId);
+      return race;
     } catch (error) {
       return {
         status: 'error',
@@ -68,13 +57,16 @@ export class KafkaController {
         );
       }
       const raceResult = await this.raceResultService.findResultByRaceId(
-        race.id,
+        race.raceId,
       );
       if (!raceResult) {
         throw new Error('Not found race result');
       }
-      await this.bettingService.settleBet(race.id, raceResult.winnerHorseId);
-      await this.raceService.settleRace(race.id);
+      await this.bettingService.settleBet(
+        race.raceId,
+        raceResult.winnerHorseId,
+      );
+      await this.raceService.settleRace(race.raceId);
       return { ok: true };
     } catch (error) {
       return {

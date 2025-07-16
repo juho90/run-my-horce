@@ -1,3 +1,4 @@
+import { RedisModule } from '@nestjs-modules/ioredis/dist/redis.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -15,6 +16,10 @@ import { RaceModule } from './race/race.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // 개발용. 운영에서는 false
       logging: true,
+    }),
+    RedisModule.forRoot({
+      type: 'single',
+      url: process.env.REDIS_URL || 'redis://localhost:6379',
     }),
     HorseModule,
     KafkaModule,

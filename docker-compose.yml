@@ -24,6 +24,15 @@ services:
     depends_on:
       - zookeeper
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   horse-core:
     build:
       context: ./core
@@ -46,3 +55,6 @@ services:
       KAFKA_BROKER: kafka:29092
     depends_on:
       - horse-core
+
+volumes:
+  redis_data:

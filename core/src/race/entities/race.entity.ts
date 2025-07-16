@@ -9,7 +9,7 @@ import {
 @Entity('races')
 export class RaceEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  raceId: number;
 
   @Column({ default: 'pending' })
   state: string;

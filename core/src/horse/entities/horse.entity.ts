@@ -1,21 +1,30 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('horses')
 export class HorseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn()
+  raceId: number;
 
-  @Column()
+  @PrimaryColumn()
+  horseId: number;
+
+  @Column('int')
   name: string;
 
   @Column('int')
-  speed: number;
+  strength: number;
 
   @Column('int')
-  stamina: number;
+  endurance: number;
 
   @Column('int')
-  power: number;
+  agility: number;
+
+  @Column('int')
+  intelligence: number;
+
+  @Column('int')
+  spirit: number;
 
   @Column({ default: 'idle' })
   status: 'idle' | 'racing' | 'retired';

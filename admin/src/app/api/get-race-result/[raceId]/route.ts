@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 const CORE_API = process.env.CORE_API || "http://localhost:8000/api";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const raceId = searchParams.get("raceId");
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ raceId: string }> }
+) {
+  const { raceId } = await params;
   if (!raceId) {
     return NextResponse.json(
       { ok: false, error: "raceId is required" },
@@ -12,7 +14,7 @@ export async function GET(req: NextRequest) {
     );
   }
   try {
-    const res = await fetch(`${CORE_API}/race-result?raceId=${raceId}`);
+    const res = await fetch(`${CORE_API}/race-result/${raceId}`);
     const text = await res.text();
     if (text) {
       return NextResponse.json(JSON.parse(text));

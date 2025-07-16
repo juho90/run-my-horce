@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { BettingService } from 'src/betting/betting.service';
 import { HorseService } from 'src/horse/horse.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
@@ -18,9 +18,14 @@ export class GatewayController {
     return this.horseService.findAll();
   }
 
-  @Get('bets')
-  getAllBets(@Query('raceId') raceId: string) {
-    return this.bettingService.findBetsByRace(Number.parseInt(raceId));
+  @Get('horses/:raceId')
+  findAllHorsesByRaceId(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.horseService.findAllByRaceId(raceId);
+  }
+
+  @Get('bets/:raceId')
+  getAllBets(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.bettingService.findBetsByRace(raceId);
   }
 
   @Get('race/latest')
@@ -28,8 +33,8 @@ export class GatewayController {
     return this.raceService.findLatestRace() || {};
   }
 
-  @Get('race-result')
-  getRaceResult(@Query('raceId') raceId: string) {
-    return this.raceResultService.findResultByRaceId(Number.parseInt(raceId));
+  @Get('race-result/:raceId')
+  getRaceResult(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.raceResultService.findResultByRaceId(raceId);
   }
 }

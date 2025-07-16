@@ -1,5 +1,7 @@
+import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import Redis from 'ioredis';
 import { Repository } from 'typeorm';
 import { RaceEntity } from './entities/race.entity';
 
@@ -8,12 +10,14 @@ export class RaceService {
   constructor(
     @InjectRepository(RaceEntity)
     private readonly raceRepo: Repository<RaceEntity>,
+    @InjectRedis()
+    private readonly redis: Redis,
   ) {}
 
   async findLatestRace(): Promise<RaceEntity | null> {
     return this.raceRepo.findOne({
       where: {},
-      order: { id: 'DESC' },
+      order: { raceId: 'DESC' },
     });
   }
 
@@ -36,7 +40,7 @@ export class RaceService {
   }
 
   async settleRace(raceId: number): Promise<RaceEntity | null> {
-    const race = await this.raceRepo.findOne({ where: { id: raceId } });
+    const race = await this.raceRepo.findOne({ where: { raceId: raceId } });
     if (!race) {
       return null;
     }

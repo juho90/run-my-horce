@@ -3,22 +3,25 @@
 import { useEffect, useState } from "react";
 
 type Horse = {
-  id: number;
+  raceId: number;
+  horseId: number;
   name: string;
-  speed: number;
-  stamina: number;
-  power: number;
+  strength: number;
+  endurance: number;
+  agility: number;
+  intelligence: number;
+  spirit: number;
 };
 
 type Race = {
-  id: number;
+  raceId: number;
   state: string;
   settled: boolean;
   startedAt?: string;
   stoppedAt?: string;
 };
 
-type BetSummary = {
+type Bet = {
   horseId: number;
   totalAmount: number;
 };
@@ -31,27 +34,14 @@ type RaceResult = {
 
 export default function BetFlowTestPage() {
   const [log, setLog] = useState<string[]>([]);
-  const [horses, setHorses] = useState<Horse[]>([]);
   const [race, setRace] = useState<Race | null>(null);
   const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
-  const [betSummary, setBetSummary] = useState<BetSummary[]>([]);
+  const [horses, setHorses] = useState<Horse[]>([]);
+  const [bet, setBet] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(false);
 
   const appendLog = (msg: string) => {
     setLog((prev) => [...prev, msg]);
-  };
-
-  // 말 목록 조회
-  const fetchHorses = async () => {
-    appendLog("말 목록 조회");
-    const res = await fetch("/api/get-horse");
-    if (res.ok) {
-      const data = await res.json();
-      setHorses(data);
-      appendLog(`말 ${data.length}마리 불러오기 성공`);
-    } else {
-      appendLog("말 불러오기 실패");
-    }
   };
 
   // 레이스 정보 조회
@@ -79,7 +69,7 @@ export default function BetFlowTestPage() {
       setRaceResult(null);
       return;
     }
-    const res = await fetch(`/api/get-race-result?raceId=${race.id}`);
+    const res = await fetch(`/api/get-race-result/${race.raceId}`);
     if (res.ok) {
       const data = await res.json();
       setRaceResult(data);
@@ -90,52 +80,39 @@ export default function BetFlowTestPage() {
     }
   };
 
-  // 베팅 요약 정보 조회
-  const fetchBetSummary = async () => {
+  // 말 목록 조회
+  const fetchHorses = async () => {
     if (race === null) {
-      setBetSummary([]);
+      setHorses([]);
+      return;
+    }
+    appendLog("말 목록 조회");
+    const res = await fetch(`/api/get-horse/${race.raceId}`);
+    if (res.ok) {
+      const data = await res.json();
+      setHorses(data);
+      appendLog(`말 ${data.length}마리 불러오기 성공`);
+    } else {
+      appendLog("말 불러오기 실패");
+    }
+  };
+
+  // 베팅 요약 정보 조회
+  const fetchBet = async () => {
+    if (race === null) {
+      setBet([]);
       return;
     }
     appendLog("베팅 요약 정보 조회");
-    const res = await fetch(`/api/get-betsummary?raceId=${race.id}`);
+    const res = await fetch(`/api/get-bet/${race.raceId}`);
     if (res.ok) {
       const data = await res.json();
-      setBetSummary(data);
+      setBet(data);
       appendLog(`베팅 요약 ${data.length}개 불러오기 성공`);
     } else {
-      setBetSummary([]);
+      setBet([]);
       appendLog("베팅 요약 정보 불러오기 실패");
     }
-  };
-
-  // 1~10 랜덤값 생성
-  const randStat = () => {
-    return Math.floor(Math.random() * 10) + 1;
-  };
-
-  // 말 10마리 생성 (랜덤 스탯)
-  const createHorses = async () => {
-    setLoading(true);
-    appendLog("말 10마리 생성 시작");
-    for (let index = 1; index <= 10; index++) {
-      const res = await fetch("/api/create-horse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `테스트말${index}`,
-          speed: randStat(),
-          stamina: randStat(),
-          power: randStat(),
-        }),
-      });
-      if (res.ok) {
-        appendLog(`테스트말${index} 생성 완료`);
-      } else {
-        appendLog(`테스트말${index} 생성 실패`);
-      }
-    }
-    await fetchHorses();
-    setLoading(false);
   };
 
   const startRace = async () => {
@@ -144,7 +121,7 @@ export default function BetFlowTestPage() {
     if (res.ok) {
       appendLog("레이스 시작됨");
       await fetchRace();
-      await fetchBetSummary();
+      await fetchBet();
     } else {
       appendLog("레이스 시작 실패");
     }
@@ -179,7 +156,7 @@ export default function BetFlowTestPage() {
     }
     appendLog("유저 베팅 데이터 100개 생성 시작");
     setLoading(true);
-    const horseIds = horses.map((h) => h.id);
+    const horseIds = horses.map((h) => h.horseId);
     for (let index = 1; index <= 100; index++) {
       const discordId = `user${index}`;
       const horseId = horseIds[Math.floor(Math.random() * horseIds.length)];
@@ -189,7 +166,7 @@ export default function BetFlowTestPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           discordId: discordId,
-          raceId: race.id,
+          raceId: race.raceId,
           horseId: horseId,
           amount: amount,
         }),
@@ -199,7 +176,7 @@ export default function BetFlowTestPage() {
       }
     }
     appendLog("유저 베팅 데이터 100개 생성 완료");
-    await fetchBetSummary();
+    await fetchBet();
     setLoading(false);
   };
 
@@ -209,19 +186,20 @@ export default function BetFlowTestPage() {
       return;
     }
     const shuffled = [...horses].sort(() => Math.random() - 0.5);
-    const winnerHorseId = shuffled[0].id;
-    const ranking = shuffled.map((h) => h.id);
+    const winnerHorseId = shuffled[0].horseId;
+    const ranking = shuffled.map((h) => h.horseId);
     const res = await fetch("/api/create-race-result", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        raceId: race.id,
+        raceId: race.raceId,
         winnerHorseId,
         ranking,
       }),
     });
     if (res.ok) {
       appendLog("레이스 결과 생성 완료");
+      await fetchHorses();
       await fetchRaceResult();
     } else {
       appendLog("레이스 결과 생성 실패");
@@ -229,17 +207,17 @@ export default function BetFlowTestPage() {
   };
 
   useEffect(() => {
-    fetchHorses();
     fetchRace();
   }, []);
 
-  // 레이스 정보가 바뀌면 베팅 요약 정보도 새로 조회
   useEffect(() => {
     if (race) {
-      fetchBetSummary();
+      fetchHorses();
+      fetchBet();
       fetchRaceResult();
     } else {
-      setBetSummary([]);
+      setHorses([]);
+      setBet([]);
       setRaceResult(null);
     }
   }, [race]);
@@ -248,30 +226,40 @@ export default function BetFlowTestPage() {
     <div style={{ padding: 32 }}>
       <h1>전체 플로우 테스트</h1>
       <div style={{ marginBottom: 16 }}>
-        <h3>말 목록</h3>
-        {horses.length === 0 ? (
-          <div>
-            <p>등록된 말이 없습니다.</p>
-            <button onClick={createHorses} disabled={loading}>
-              {loading ? "생성 중..." : "말 10마리 생성"}
-            </button>
-          </div>
-        ) : (
-          <ul>
-            {horses.map((horse) => (
-              <li key={horse.id}>
-                {horse.id}: {horse.name} (Speed: {horse.speed}, Stamina:{" "}
-                {horse.stamina}, Power: {horse.power})
-              </li>
-            ))}
-          </ul>
-        )}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={startRace}>레이스 시작</button>
+          <button onClick={stopRace}>레이스 정지</button>
+          <button
+            onClick={createRaceResult}
+            disabled={race === null || raceResult !== null}
+          >
+            레이스 결과 생성
+          </button>
+          <button
+            onClick={createUserBets}
+            disabled={loading || race === null || bet.length > 0}
+            style={{ opacity: race === null ? 0.5 : 1 }}
+          >
+            {loading ? "생성 중..." : "유저 베팅 데이터 100개 생성"}
+          </button>
+          <button
+            onClick={settleRace}
+            disabled={
+              loading ||
+              race === null ||
+              race.state !== "finished" ||
+              bet.length === 0
+            }
+          >
+            정산
+          </button>
+        </div>
       </div>
       <div style={{ marginBottom: 16 }}>
         <h3>레이스 정보</h3>
         {race ? (
           <div>
-            <p>🆔 ID: {race.id}</p>
+            <p>🆔 ID: {race.raceId}</p>
             <p>🏁 상태: {race.state}</p>
             {race.startedAt && (
               <p>🚀 시작: {new Date(race.startedAt).toLocaleString()}</p>
@@ -285,34 +273,165 @@ export default function BetFlowTestPage() {
         )}
       </div>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={startRace}>레이스 시작</button>
-          <button onClick={stopRace}>레이스 정지</button>
-          <button
-            onClick={createRaceResult}
-            disabled={race === null || raceResult !== null}
+        <h3>말 목록</h3>
+        {horses.length === 0 ? (
+          <div>
+            <p>등록된 말이 없습니다.</p>
+          </div>
+        ) : (
+          <table
+            className="horse-table"
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              tableLayout: "fixed",
+            }}
           >
-            레이스 결과 생성
-          </button>
-          <button
-            onClick={createUserBets}
-            disabled={loading || race === null || betSummary.length > 0}
-            style={{ opacity: race === null ? 0.5 : 1 }}
-          >
-            {loading ? "생성 중..." : "유저 베팅 데이터 100개 생성"}
-          </button>
-          <button
-            onClick={settleRace}
-            disabled={
-              loading ||
-              race === null ||
-              race.state !== "finished" ||
-              betSummary.length === 0
-            }
-          >
-            정산
-          </button>
-        </div>
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "10%",
+                  }}
+                >
+                  번호
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "20%",
+                  }}
+                >
+                  이름
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "14%",
+                  }}
+                >
+                  힘
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "14%",
+                  }}
+                >
+                  지구력
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "14%",
+                  }}
+                >
+                  민첩성
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "14%",
+                  }}
+                >
+                  지능
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    width: "14%",
+                  }}
+                >
+                  정신력
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {horses.map((horse) => (
+                <tr key={horse.horseId}>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.horseId}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.name}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.strength}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.endurance}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.agility}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.intelligence}
+                  </td>
+                  <td
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {horse.spirit}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
       <div style={{ marginBottom: 16 }}>
         <h3>레이스 결과</h3>
@@ -331,12 +450,12 @@ export default function BetFlowTestPage() {
         <h3>베팅 요약</h3>
         {race === null ? (
           <p>레이스가 없으면 베팅 정보를 볼 수 없습니다.</p>
-        ) : betSummary.length === 0 ? (
+        ) : bet.length === 0 ? (
           <p>베팅 데이터가 없습니다.</p>
         ) : (
           <ul>
-            {betSummary.map((summary) => {
-              const horse = horses.find((h) => h.id === summary.horseId);
+            {bet.map((summary) => {
+              const horse = horses.find((h) => h.horseId === summary.horseId);
               return (
                 <li key={summary.horseId}>
                   {horse ? `${horse.name}` : `말#${summary.horseId}`} :{" "}
