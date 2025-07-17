@@ -20,11 +20,6 @@ export class GatewayController {
     return this.raceService.findLatestRace() || {};
   }
 
-  @Get('race-result/:raceId')
-  getRaceResult(@Param('raceId', ParseIntPipe) raceId: number) {
-    return this.raceResultService.findResultByRaceId(raceId);
-  }
-
   @Get('horses')
   findAllHorses() {
     return this.horseService.findHorseAll();
@@ -38,6 +33,17 @@ export class GatewayController {
   @Get('track/:raceId')
   findTrackByRaceId(@Param('raceId', ParseIntPipe) raceId: number) {
     return this.trackService.findTrack(raceId);
+  }
+
+  @Get('race-log/:raceId')
+  async getRaceLog(@Param('raceId', ParseIntPipe) raceId: number) {
+    const html = await this.raceResultService.findLogByRaceId(raceId);
+    return { html };
+  }
+
+  @Get('race-result/:raceId')
+  getRaceResult(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.raceResultService.findResultByRaceId(raceId);
   }
 
   @Get('bets/:raceId')

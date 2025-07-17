@@ -1,9 +1,10 @@
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { convertHorsesForRace } from 'engine/src/horse';
 import { RaceLog } from 'engine/src/raceLog';
 import { runRaceSimulator } from 'engine/src/raceSimulator';
-import { RaceTrack } from 'engine/src/raceTrack';
+import { convertTrackForRace, RaceTrack } from 'engine/src/raceTrack';
 import { generateRaceWebGLHtml } from 'engine/src/raceViewerWebGL';
 import * as fs from 'fs';
 import { Redis } from 'ioredis';
@@ -35,6 +36,14 @@ export class RaceResultService {
     });
   }
 
+  async findLogByRaceId(raceId: number): Promise<string> {
+    const logs = await this.redis.exists(`raceLogs:${raceId}`);
+    if (!logs) {
+      throw new Error(`Not found race logs for race ${raceId}`);
+    }
+    return `http://localhost:28000/race/race-${raceId}.html`;
+  }
+
   async createRaceResult(raceResult: Partial<RaceResultEntity>) {
     const result = this.raceResultRepository.create(raceResult);
     return await this.raceResultRepository.save(result);
@@ -49,8 +58,8 @@ export class RaceResultService {
     if (!track) {
       throw new Error(`Not found track for race ${raceId}`);
     }
-    const convertedHorses = this.horseService.convertHorsesForRace(horses);
-    const convertedTrack = this.trackService.convertTrackForRace(track);
+    const convertedHorses = convertHorsesForRace(horses);
+    const convertedTrack = convertTrackForRace(track);
     const raceLogs = runRaceSimulator(convertedTrack, convertedHorses);
     await this.saveRaceLogs(raceId, raceLogs);
     await this.generateRaceHTML(raceId, convertedTrack, raceLogs);
@@ -86,12 +95,12 @@ export class RaceResultService {
     raceLogs: RaceLog[],
   ) {
     const htmlString = generateRaceWebGLHtml(track, raceLogs);
-    const staticDir = join(process.cwd(), 'static');
+    const staticDir = join(process.cwd(), process.env.HTML_FILE_PATH!);
     if (!fs.existsSync(staticDir)) {
       fs.mkdirSync(staticDir, { recursive: true });
     }
     const filePath = join(staticDir, `race-${raceId}.html`);
     fs.writeFileSync(filePath, htmlString, 'utf8');
-    Logger.log(`Race HTML generated: /static/race-${raceId}.html`);
+    Logger.log(`Race HTML generated: ${filePath}`);
   }
 }

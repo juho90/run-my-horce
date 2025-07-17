@@ -25,8 +25,8 @@ async function bootstrap() {
   await kafkaApp.listen();
   Logger.log('Horse Core HTTP + Kafka Microservice is running');
   app.enableCors();
-  app.useStaticAssets(join(__dirname, '..', 'static'), {
-    prefix: '/static/',
+  app.useStaticAssets(join(__dirname, '..', 'race'), {
+    prefix: '/race/',
   });
   await app.listen(process.env.PORT || 3000);
 }

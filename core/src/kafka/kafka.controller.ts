@@ -83,7 +83,12 @@ export class KafkaController {
   @MessagePattern(KAFKA_TOPICS.CREATE_RACE_LOG)
   async handleCreateRaceLog(@Payload() message: RaceLog) {
     try {
-      return await this.raceResultService.createRaceLog(message.raceId);
+      const html = await this.raceResultService.createRaceLog(message.raceId);
+      return {
+        status: 'success',
+        raceId: message.raceId,
+        html: html,
+      };
     } catch (error) {
       return {
         status: 'error',

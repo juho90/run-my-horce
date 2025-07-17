@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Horse, HorseViewer } from "./components/horse";
 import { Track, TrackViewer } from "./components/track";
@@ -29,6 +30,7 @@ export default function BetFlowTestPage() {
   const [horses, setHorses] = useState<Horse[]>([]);
   const [track, setTrack] = useState<Track | null>(null);
   const [bet, setBet] = useState<Bet[]>([]);
+  const [raceLog, setRaceLog] = useState<string | null>(null);
   const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -72,6 +74,7 @@ export default function BetFlowTestPage() {
     }
   };
 
+  // 트랙 정보 조회
   const fetchTrack = async () => {
     if (race === null) {
       setTrack(null);
@@ -86,6 +89,45 @@ export default function BetFlowTestPage() {
     } else {
       setTrack(null);
       appendLog("트랙 정보 불러오기 실패");
+    }
+  };
+
+  // 레이스 로그 조회
+  const fetchRaceLog = async () => {
+    if (race === null) {
+      setRaceLog(null);
+      return;
+    }
+    const res = await fetch(`/api/get-race-log/${race.raceId}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.html) {
+        setRaceLog(data.html);
+        appendLog("레이스 로그 조회 성공");
+      } else {
+        setRaceLog(null);
+        appendLog("레이스 로그가 없습니다.");
+      }
+    } else {
+      setRaceLog(null);
+      appendLog("레이스 로그 조회 실패");
+    }
+  };
+
+  // 레이스 결과 조회
+  const fetchRaceResult = async () => {
+    if (race === null) {
+      setRaceResult(null);
+      return;
+    }
+    const res = await fetch(`/api/get-race-result/${race.raceId}`);
+    if (res.ok) {
+      const data = await res.json();
+      setRaceResult(data);
+      appendLog("레이스 결과 조회 성공");
+    } else {
+      setRaceResult(null);
+      appendLog("레이스 결과 조회 실패");
     }
   };
 
@@ -104,23 +146,6 @@ export default function BetFlowTestPage() {
     } else {
       setBet([]);
       appendLog("베팅 요약 정보 불러오기 실패");
-    }
-  };
-
-  // 결과 조회
-  const fetchRaceResult = async () => {
-    if (race === null) {
-      setRaceResult(null);
-      return;
-    }
-    const res = await fetch(`/api/get-race-result/${race.raceId}`);
-    if (res.ok) {
-      const data = await res.json();
-      setRaceResult(data);
-      appendLog("레이스 결과 조회 성공");
-    } else {
-      setRaceResult(null);
-      appendLog("레이스 결과 조회 실패");
     }
   };
 
@@ -203,6 +228,7 @@ export default function BetFlowTestPage() {
     });
     if (res.ok) {
       appendLog("레이스 로그 생성 완료");
+      await fetchRaceLog();
     } else {
       appendLog("레이스 로그 생성 실패");
     }
@@ -242,13 +268,15 @@ export default function BetFlowTestPage() {
     if (race) {
       fetchHorses();
       fetchTrack();
-      fetchBet();
+      fetchRaceLog();
       fetchRaceResult();
+      fetchBet();
     } else {
       setHorses([]);
       setTrack(null);
-      setBet([]);
+      setRaceLog(null);
       setRaceResult(null);
+      setBet([]);
     }
   }, [race]);
 
@@ -290,7 +318,9 @@ export default function BetFlowTestPage() {
       </div>
       <div style={{ marginBottom: 16 }}>
         <h3>레이스 정보</h3>
-        {race ? (
+        {race === null ? (
+          <p>진행 중인 레이스가 없습니다.</p>
+        ) : (
           <div>
             <p>🆔 ID: {race.raceId}</p>
             <p>🏁 상태: {race.state}</p>
@@ -301,8 +331,6 @@ export default function BetFlowTestPage() {
               <p>🛑 종료: {new Date(race.stoppedAt).toLocaleString()}</p>
             )}
           </div>
-        ) : (
-          <p>진행 중인 레이스가 없습니다.</p>
         )}
       </div>
       <div style={{ marginBottom: 16 }}>
@@ -317,19 +345,42 @@ export default function BetFlowTestPage() {
       </div>
       <div style={{ marginBottom: 16 }}>
         <h3>트랙 정보</h3>
-        {race === null ? (
-          <p>레이스가 없으면 트랙을 볼 수 없습니다.</p>
-        ) : track === null ? (
+        {track === null ? (
           <p>트랙 정보가 없습니다.</p>
         ) : (
           <TrackViewer track={track} />
         )}
       </div>
       <div style={{ marginBottom: 16 }}>
+        <h3>레이스 로그</h3>
+        {raceLog === null ? (
+          <p>레이스 로그가 없습니다.</p>
+        ) : (
+          <div>
+            <p>
+              <Link
+                href={raceLog}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "#0066cc",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                }}
+              >
+                🔗 레이스 로그 보기
+              </Link>
+            </p>
+            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+              URL: {raceLog}
+            </p>
+          </div>
+        )}
+      </div>
+      <div style={{ marginBottom: 16 }}>
         <h3>레이스 결과</h3>
-        {race === null ? (
-          <p>레이스가 없으면 결과를 볼 수 없습니다.</p>
-        ) : raceResult === null ? (
+        {raceResult === null ? (
           <p>레이스 결과가 없습니다.</p>
         ) : (
           <div>
@@ -340,9 +391,7 @@ export default function BetFlowTestPage() {
       </div>
       <div style={{ marginBottom: 16 }}>
         <h3>베팅 요약</h3>
-        {race === null ? (
-          <p>레이스가 없으면 베팅 정보를 볼 수 없습니다.</p>
-        ) : bet.length === 0 ? (
+        {bet.length === 0 ? (
           <p>베팅 데이터가 없습니다.</p>
         ) : (
           <ul>
