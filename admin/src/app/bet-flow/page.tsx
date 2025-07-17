@@ -189,6 +189,25 @@ export default function BetFlowTestPage() {
     setLoading(false);
   };
 
+  // 로그 생성
+  const createRaceLog = async () => {
+    if (race === null) {
+      return;
+    }
+    const res = await fetch("/api/create-race-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        raceId: race.raceId,
+      }),
+    });
+    if (res.ok) {
+      appendLog("레이스 로그 생성 완료");
+    } else {
+      appendLog("레이스 로그 생성 실패");
+    }
+  };
+
   // 결과 생성
   const createRaceResult = async () => {
     if (race === null) {
@@ -240,6 +259,9 @@ export default function BetFlowTestPage() {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={startRace}>레이스 시작</button>
           <button onClick={stopRace}>레이스 정지</button>
+          <button onClick={createRaceLog} disabled={race === null}>
+            레이스 로그 생성
+          </button>
           <button
             onClick={createRaceResult}
             disabled={race === null || raceResult !== null}

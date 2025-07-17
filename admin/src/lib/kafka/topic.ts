@@ -3,6 +3,7 @@ export const KAFKA_TOPICS = {
   START_RACE: "horse.start-race",
   STOP_RACE: "horse.stop-race",
   SETTLE_RACE: "horse.settle-race",
+  CREATE_RACE_LOG: "horse.create-race-log",
   CREATE_RACE_RESULT: "horse.create-race-result",
   CREATE_BET: "horse.create-bet",
 };

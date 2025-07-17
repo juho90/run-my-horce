@@ -12,6 +12,10 @@ export interface Betting {
   amount: number;
 }
 
+export interface RaceLog {
+  raceId: number;
+}
+
 export interface RaceResult {
   raceId: number;
   winnerHorseId: number;

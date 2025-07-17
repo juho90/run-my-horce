@@ -27,12 +27,12 @@ export class GatewayController {
 
   @Get('horses')
   findAllHorses() {
-    return this.horseService.findAll();
+    return this.horseService.findHorseAll();
   }
 
   @Get('horses/:raceId')
   findAllHorsesByRaceId(@Param('raceId', ParseIntPipe) raceId: number) {
-    return this.horseService.findAllByRaceId(raceId);
+    return this.horseService.findHorseAllByRaceId(raceId);
   }
 
   @Get('track/:raceId')

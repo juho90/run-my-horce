@@ -28,7 +28,7 @@ export class TrackService {
     return JSON.parse(data) as RaceTrack;
   }
 
-  convertForRace(raceTrack: {
+  convertTrackForRace(raceTrack: {
     width: number;
     height: number;
     segments: RaceSegment[];

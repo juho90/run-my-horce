@@ -8,7 +8,7 @@ import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
 import { TrackService } from 'src/race/track.service';
 import { KAFKA_TOPICS } from './kafka.constants';
-import { Betting, RaceResult } from './kafka.interface';
+import { Betting, RaceLog, RaceResult } from './kafka.interface';
 
 @Controller()
 export class KafkaController {
@@ -26,7 +26,7 @@ export class KafkaController {
     try {
       const race = await this.raceService.startRace();
       await this.trackService.createTrack(race.raceId);
-      await this.horseService.createByRaceId(race.raceId);
+      await this.horseService.createHorses(race.raceId);
       return race;
     } catch (error) {
       return {
@@ -80,10 +80,23 @@ export class KafkaController {
     }
   }
 
+  @MessagePattern(KAFKA_TOPICS.CREATE_RACE_LOG)
+  async handleCreateRaceLog(@Payload() message: RaceLog) {
+    try {
+      return await this.raceResultService.createRaceLog(message.raceId);
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to create race log',
+        error: error.message,
+      };
+    }
+  }
+
   @MessagePattern(KAFKA_TOPICS.CREATE_RACE_RESULT)
   async handleCreateRaceResult(@Payload() message: RaceResult) {
     try {
-      return await this.raceResultService.createResult(message);
+      return await this.raceResultService.createRaceResult(message);
     } catch (error) {
       return {
         status: 'error',
