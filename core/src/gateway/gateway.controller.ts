@@ -37,17 +37,17 @@ export class GatewayController {
 
   @Get('race-log/:raceId')
   async getRaceLog(@Param('raceId', ParseIntPipe) raceId: number) {
-    const html = await this.raceResultService.findLogByRaceId(raceId);
+    const html = await this.raceResultService.findLogs(raceId);
     return { html };
   }
 
   @Get('race-result/:raceId')
   getRaceResult(@Param('raceId', ParseIntPipe) raceId: number) {
-    return this.raceResultService.findResultByRaceId(raceId);
+    return this.raceResultService.findRaceResult(raceId);
   }
 
   @Get('bets/:raceId')
   getAllBets(@Param('raceId', ParseIntPipe) raceId: number) {
-    return this.bettingService.findBetsByRace(raceId);
+    return this.bettingService.findBetsByRaceId(raceId);
   }
 }

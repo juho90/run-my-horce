@@ -1,11 +1,12 @@
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { convertHorsesForRace } from 'engine/src/horse';
-import { RaceLog } from 'engine/src/raceLog';
+import { RaceHorse } from 'engine/src/raceHorse';
+import { convertHorsesForRace } from 'engine/src/raceHorseStatus';
 import { runRaceSimulator } from 'engine/src/raceSimulator';
 import { convertTrackForRace, RaceTrack } from 'engine/src/raceTrack';
-import { generateRaceWebGLHtml } from 'engine/src/raceViewerWebGL';
+import { RaceTracker } from 'engine/src/raceTracker';
+import { generateRaceWebGLHtml, RaceLog } from 'engine/src/raceViewer';
 import * as fs from 'fs';
 import { Redis } from 'ioredis';
 import { join } from 'path';
@@ -30,26 +31,7 @@ export class RaceResultService {
     private readonly trackService: TrackService,
   ) {}
 
-  async findResultByRaceId(raceId: number) {
-    return await this.raceResultRepository.findOne({
-      where: { raceId },
-    });
-  }
-
-  async findLogByRaceId(raceId: number): Promise<string> {
-    const logs = await this.redis.exists(`raceLogs:${raceId}`);
-    if (!logs) {
-      throw new Error(`Not found race logs for race ${raceId}`);
-    }
-    return `http://localhost:28000/race/race-${raceId}.html`;
-  }
-
-  async createRaceResult(raceResult: Partial<RaceResultEntity>) {
-    const result = this.raceResultRepository.create(raceResult);
-    return await this.raceResultRepository.save(result);
-  }
-
-  async createRaceLog(raceId: number) {
+  async createRace(raceId: number): Promise<void> {
     const horses = await this.horseService.findHorseAllByRaceId(raceId);
     if (horses.length === 0) {
       throw new Error(`Not found horses for race ${raceId}`);
@@ -58,43 +40,55 @@ export class RaceResultService {
     if (!track) {
       throw new Error(`Not found track for race ${raceId}`);
     }
-    const convertedHorses = convertHorsesForRace(horses);
-    const convertedTrack = convertTrackForRace(track);
-    const raceLogs = runRaceSimulator(convertedTrack, convertedHorses);
-    await this.saveRaceLogs(raceId, raceLogs);
-    await this.generateRaceHTML(raceId, convertedTrack, raceLogs);
+    const horseStatuss = convertHorsesForRace(horses);
+    const raceTrack = convertTrackForRace(track);
+    const raceTracker = new RaceTracker(raceTrack);
+    const gateNodes = raceTracker.getGateNodes();
+    const raceHorses: RaceHorse[] = horseStatuss.map((horse, index) => {
+      return new RaceHorse(horse, gateNodes[index]);
+    });
+    const { finishedHorses, logs } = runRaceSimulator(
+      raceTrack,
+      raceTracker,
+      raceHorses,
+    );
+    await this.createRaceResult({
+      raceId,
+      winnerHorseId: finishedHorses[0],
+      ranking: finishedHorses,
+    });
+    await this.generateRaceHTML(raceId, raceTrack, raceTracker, logs);
   }
 
-  async saveRaceLogs(raceId: number, raceLogs: RaceLog[]) {
-    try {
-      const jsonString = JSON.stringify(raceLogs);
-      const compressed = await gzip(jsonString);
-      await this.redis.set(`raceLogs:${raceId}`, compressed);
-    } catch (error) {
-      throw new Error(`Failed to save race logs for race ${raceId}`);
-    }
+  async createRaceResult(
+    raceResult: Partial<RaceResultEntity>,
+  ): Promise<RaceResultEntity> {
+    const result = this.raceResultRepository.create(raceResult);
+    return await this.raceResultRepository.save(result);
   }
 
-  async loadRaceLogs(raceId: number) {
-    try {
-      const compressed = await this.redis.getBuffer(`raceLogs:${raceId}`);
-      if (!compressed) {
-        return null;
-      }
-      const decompressed = await gunzip(compressed);
-      const jsonString = decompressed.toString();
-      return JSON.parse(jsonString) as RaceLog[];
-    } catch (error) {
-      throw new Error(`Failed to load race logs for race ${raceId}`);
+  async findRaceResult(raceId: number): Promise<RaceResultEntity | null> {
+    return await this.raceResultRepository.findOne({
+      where: { raceId },
+    });
+  }
+
+  async findLogs(raceId: number): Promise<string | null> {
+    const staticDir = join(process.cwd(), process.env.HTML_FILE_PATH!);
+    const filePath = join(staticDir, `race-${raceId}.html`);
+    if (!fs.existsSync(filePath)) {
+      return null;
     }
+    return `http://localhost:28000/race/race-${raceId}.html`;
   }
 
   private async generateRaceHTML(
     raceId: number,
-    track: RaceTrack,
+    raceTrack: RaceTrack,
+    raceTracker: RaceTracker,
     raceLogs: RaceLog[],
-  ) {
-    const htmlString = generateRaceWebGLHtml(track, raceLogs);
+  ): Promise<void> {
+    const htmlString = generateRaceWebGLHtml(raceTrack, raceTracker, raceLogs);
     const staticDir = join(process.cwd(), process.env.HTML_FILE_PATH!);
     if (!fs.existsSync(staticDir)) {
       fs.mkdirSync(staticDir, { recursive: true });

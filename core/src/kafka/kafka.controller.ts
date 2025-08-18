@@ -59,7 +59,7 @@ export class KafkaController {
           `Bad request race state ${race?.state} settled ${race?.settled}`,
         );
       }
-      const raceResult = await this.raceResultService.findResultByRaceId(
+      const raceResult = await this.raceResultService.findRaceResult(
         race.raceId,
       );
       if (!raceResult) {
@@ -83,7 +83,7 @@ export class KafkaController {
   @MessagePattern(KAFKA_TOPICS.CREATE_RACE_LOG)
   async handleCreateRaceLog(@Payload() message: RaceLog) {
     try {
-      const html = await this.raceResultService.createRaceLog(message.raceId);
+      const html = await this.raceResultService.createRace(message.raceId);
       return {
         status: 'success',
         raceId: message.raceId,

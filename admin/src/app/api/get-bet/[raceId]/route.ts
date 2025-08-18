@@ -14,13 +14,11 @@ export async function GET(
     );
   }
   try {
-    // core 서버에서 해당 레이스의 베팅 목록 조회
     const res = await fetch(`${CORE_API}/bets/${raceId}`);
     if (!res.ok) {
       throw new Error("Core API error");
     }
     const bets = await res.json();
-    // horseId별로 금액 합산
     const summaryMap: Record<number, number> = {};
     for (const bet of bets) {
       const horseId = Number(bet.horseId);
@@ -30,7 +28,6 @@ export async function GET(
       }
       summaryMap[horseId] += amount;
     }
-    // summary 배열로 변환
     const summary = Object.entries(summaryMap).map(
       ([horseId, totalAmount]) => ({
         horseId: Number(horseId),

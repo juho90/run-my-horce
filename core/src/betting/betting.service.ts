@@ -15,11 +15,11 @@ export class BettingService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findBetsByRace(raceId: number): Promise<BettingEntity[]> {
+  async findBetsByRaceId(raceId: number): Promise<BettingEntity[]> {
     return this.bettingRepo.find({ where: { raceId } });
   }
 
-  async findBetsByHorse(
+  async findBetsByHorseId(
     raceId: number,
     horseId: number,
   ): Promise<BettingEntity[]> {

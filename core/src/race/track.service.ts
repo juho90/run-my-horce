@@ -1,5 +1,6 @@
 import { InjectRedis } from '@nestjs-modules/ioredis/dist/redis.decorators';
 import { Injectable } from '@nestjs/common';
+import { RaceSegment } from 'engine/src/raceSegment';
 import { createTrack, RaceTrack } from 'engine/src/raceTrack';
 import Redis from 'ioredis/built/Redis';
 
@@ -17,11 +18,11 @@ export class TrackService {
     return track;
   }
 
-  async findTrack(raceId: number): Promise<RaceTrack | null> {
+  async findTrack(raceId: number): Promise<{ segments: RaceSegment[] } | null> {
     const data = await this.redis.get(`raceTrack:${raceId}`);
     if (!data) {
       return null;
     }
-    return JSON.parse(data) as RaceTrack;
+    return JSON.parse(data) as { segments: RaceSegment[] };
   }
 }
