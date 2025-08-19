@@ -18,7 +18,7 @@ async function bootstrap() {
         brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
       },
       consumer: {
-        groupId: 'horse-core-consumer',
+        groupId: process.env.KAFKA_GROUP_ID || 'horse-core',
       },
     },
   });
