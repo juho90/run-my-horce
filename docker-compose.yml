@@ -12,7 +12,7 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     ports:
-      - "9092:9092"
+      - "9000:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -40,7 +40,10 @@ services:
     ports:
       - "8000:3000"
     environment:
+      KAFKA_CLIENT_ID: horse-core
       KAFKA_BROKER: kafka:29092
+      REDIS_URL: redis://redis:6379
+      HTML_FILE_PATH: /app/dist/race/
     depends_on:
       - kafka
 
@@ -51,8 +54,9 @@ services:
     ports:
       - "8080:3000"
     environment:
-      CORE_API: http://horse-core:3000/api
+      KAFKA_CLIENT_ID: horse-admin
       KAFKA_BROKER: kafka:29092
+      CORE_API: http://horse-core:3000/api
     depends_on:
       - horse-core
 
