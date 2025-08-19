@@ -43,7 +43,7 @@ services:
       KAFKA_CLIENT_ID: horse-core
       KAFKA_BROKER: kafka:29092
       REDIS_URL: redis://redis:6379
-      HTML_FILE_PATH: /app/dist/race/
+      HTML_FILE_PATH: ./dist/race/
     depends_on:
       - kafka
 

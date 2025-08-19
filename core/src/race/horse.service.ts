@@ -24,6 +24,19 @@ export class HorseService {
     return this.horseRepo.save(horses);
   }
 
+  async upsertHorse(horse: Partial<HorseEntity>): Promise<HorseEntity> {
+    const existingHorse = await this.horseRepo.findOne({
+      where: { raceId: horse.raceId, horseId: horse.horseId },
+    });
+    if (existingHorse) {
+      Object.assign(existingHorse, horse);
+      return this.horseRepo.save(existingHorse);
+    } else {
+      const horseEntity = this.horseRepo.create(horse);
+      return this.horseRepo.save(horseEntity);
+    }
+  }
+
   async findHorseAll(): Promise<HorseEntity[]> {
     return this.horseRepo.find();
   }

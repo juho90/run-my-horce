@@ -4,11 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.text();
     await producer.connect();
     await producer.send({
       topic: KAFKA_TOPICS.CREATE_HORSE,
-      messages: [{ value: JSON.stringify(body) }],
+      messages: [{ value: body }],
     });
     return NextResponse.json({ ok: true });
   } catch (e) {

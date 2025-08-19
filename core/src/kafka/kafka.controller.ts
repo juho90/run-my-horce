@@ -7,8 +7,8 @@ import { RaceResultService } from 'src/race-result/race-result.service';
 import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
 import { TrackService } from 'src/race/track.service';
-import { KAFKA_TOPICS } from './kafka.constants';
-import { Betting, RaceLog, RaceResult } from './kafka.interface';
+import { Betting, RaceHorse, RaceLog, RaceResult } from './kafka.interface';
+import { KafkaTopics } from './kafka.topic';
 
 @Controller()
 export class KafkaController {
@@ -21,7 +21,7 @@ export class KafkaController {
     private readonly raceResultService: RaceResultService,
   ) {}
 
-  @MessagePattern(KAFKA_TOPICS.START_RACE)
+  @MessagePattern(KafkaTopics.START_RACE)
   async handleStartRace() {
     try {
       const race = await this.raceService.startRace();
@@ -37,7 +37,7 @@ export class KafkaController {
     }
   }
 
-  @MessagePattern(KAFKA_TOPICS.STOP_RACE)
+  @MessagePattern(KafkaTopics.STOP_RACE)
   async handleStopRace() {
     try {
       return await this.raceService.stopRace();
@@ -50,7 +50,7 @@ export class KafkaController {
     }
   }
 
-  @MessagePattern(KAFKA_TOPICS.SETTLE_RACE)
+  @MessagePattern(KafkaTopics.SETTLE_RACE)
   async handleSettleRace() {
     try {
       const race = await this.raceService.findLatestRace();
@@ -80,7 +80,25 @@ export class KafkaController {
     }
   }
 
-  @MessagePattern(KAFKA_TOPICS.CREATE_RACE_LOG)
+  @MessagePattern(KafkaTopics.CREATE_HORSE)
+  async handleCreateHorse(@Payload() message: RaceHorse) {
+    try {
+      const horse = await this.horseService.upsertHorse(message);
+      return {
+        status: 'success',
+        raceId: message.raceId,
+        horses: horse,
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to create horses',
+        error: error.message,
+      };
+    }
+  }
+
+  @MessagePattern(KafkaTopics.CREATE_RACE_LOG)
   async handleCreateRaceLog(@Payload() message: RaceLog) {
     try {
       const html = await this.raceResultService.createRace(message.raceId);
@@ -98,7 +116,7 @@ export class KafkaController {
     }
   }
 
-  @MessagePattern(KAFKA_TOPICS.CREATE_RACE_RESULT)
+  @MessagePattern(KafkaTopics.CREATE_RACE_RESULT)
   async handleCreateRaceResult(@Payload() message: RaceResult) {
     try {
       return await this.raceResultService.createRaceResult(message);
@@ -111,7 +129,7 @@ export class KafkaController {
     }
   }
 
-  @MessagePattern(KAFKA_TOPICS.CREATE_BET)
+  @MessagePattern(KafkaTopics.CREATE_BET)
   async handleCreateBet(@Payload() message: Betting) {
     try {
       if (message.discordId.startsWith('user')) {

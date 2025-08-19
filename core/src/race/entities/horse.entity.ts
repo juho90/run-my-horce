@@ -15,7 +15,7 @@ export class HorseEntity {
   @PrimaryColumn()
   horseId: number;
 
-  @Column('int')
+  @Column({ type: 'nvarchar', length: 50 })
   name: string;
 
   @Column({ default: 'VERSATILE', type: 'varchar', length: 20 })
