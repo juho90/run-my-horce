@@ -23,129 +23,68 @@ export class KafkaController {
 
   @MessagePattern(KafkaTopics.START_RACE)
   async handleStartRace() {
-    try {
-      const race = await this.raceService.startRace();
-      await this.trackService.createTrack(race.raceId);
-      await this.horseService.createHorses(race.raceId);
-      return race;
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to start race',
-        error: error.message,
-      };
-    }
+    const race = await this.raceService.startRace();
+    await this.trackService.createTrack(race.raceId);
+    await this.horseService.createHorses(race.raceId);
+    return race;
   }
 
   @MessagePattern(KafkaTopics.STOP_RACE)
   async handleStopRace() {
-    try {
-      return await this.raceService.stopRace();
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to stop race',
-        error: error.message,
-      };
-    }
+    return await this.raceService.stopRace();
   }
 
   @MessagePattern(KafkaTopics.SETTLE_RACE)
   async handleSettleRace() {
-    try {
-      const race = await this.raceService.findLatestRace();
-      if (!race || race.state !== 'finished' || race.settled) {
-        throw new Error(
-          `Bad request race state ${race?.state} settled ${race?.settled}`,
-        );
-      }
-      const raceResult = await this.raceResultService.findRaceResult(
-        race.raceId,
+    const race = await this.raceService.findLatestRace();
+    if (!race || race.state !== 'finished' || race.settled) {
+      throw new Error(
+        `Bad request race state ${race?.state} settled ${race?.settled}`,
       );
-      if (!raceResult) {
-        throw new Error('Not found race result');
-      }
-      await this.bettingService.settleBet(
-        race.raceId,
-        raceResult.winnerHorseId,
-      );
-      await this.raceService.settleRace(race.raceId);
-      return { ok: true };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to settle race',
-        error: error.message,
-      };
     }
+    const raceResult = await this.raceResultService.findRaceResult(race.raceId);
+    if (!raceResult) {
+      throw new Error('Not found race result');
+    }
+    await this.bettingService.settleBet(race.raceId, raceResult.winnerHorseId);
+    await this.raceService.settleRace(race.raceId);
+    return { ok: true };
   }
 
   @MessagePattern(KafkaTopics.CREATE_HORSE)
   async handleCreateHorse(@Payload() message: RaceHorse) {
-    try {
-      const horse = await this.horseService.upsertHorse(message);
-      return {
-        status: 'success',
-        raceId: message.raceId,
-        horses: horse,
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to create horses',
-        error: error.message,
-      };
-    }
+    const horse = await this.horseService.upsertHorse(message);
+    return {
+      status: 'success',
+      raceId: message.raceId,
+      horses: horse,
+    };
   }
 
   @MessagePattern(KafkaTopics.CREATE_RACE_LOG)
   async handleCreateRaceLog(@Payload() message: RaceLog) {
-    try {
-      const html = await this.raceResultService.createRace(message.raceId);
-      return {
-        status: 'success',
-        raceId: message.raceId,
-        html: html,
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to create race log',
-        error: error.message,
-      };
-    }
+    const html = await this.raceResultService.createRace(message.raceId);
+    return {
+      status: 'success',
+      raceId: message.raceId,
+      html: html,
+    };
   }
 
   @MessagePattern(KafkaTopics.CREATE_RACE_RESULT)
   async handleCreateRaceResult(@Payload() message: RaceResult) {
-    try {
-      return await this.raceResultService.createRaceResult(message);
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to create race result',
-        error: error.message,
-      };
-    }
+    return await this.raceResultService.createRaceResult(message);
   }
 
   @MessagePattern(KafkaTopics.CREATE_BET)
   async handleCreateBet(@Payload() message: Betting) {
-    try {
-      if (message.discordId.startsWith('user')) {
-        await this.inventoryService.addItem(
-          message.discordId,
-          ITEM_IDS.COIN,
-          message.amount,
-        );
-      }
-      return await this.bettingService.placeBet(message);
-    } catch (error) {
-      return {
-        status: 'error',
-        message: 'Failed to create bet',
-        error: error.message,
-      };
+    if (message.discordId.startsWith('user')) {
+      await this.inventoryService.addItem(
+        message.discordId,
+        ITEM_IDS.COIN,
+        message.amount,
+      );
     }
+    return await this.bettingService.placeBet(message);
   }
 }

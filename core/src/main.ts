@@ -4,6 +4,8 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
+import { ExceptionsFilter } from './api-logger/exceptions.filter';
+import { MetricsInterceptor } from './api-logger/metrics.interceptor';
 import { AppModule } from './app.module';
 
 dotenv.config();
@@ -22,12 +24,16 @@ async function bootstrap() {
       },
     },
   });
+  kafkaApp.useGlobalInterceptors(app.get(MetricsInterceptor));
+  kafkaApp.useGlobalFilters(app.get(ExceptionsFilter));
   await kafkaApp.listen();
   Logger.log('Horse Core HTTP + Kafka Microservice is running');
   app.enableCors();
   app.useStaticAssets(join(__dirname, '..', 'race'), {
     prefix: '/race/',
   });
+  app.useGlobalInterceptors(app.get(MetricsInterceptor));
+  app.useGlobalFilters(app.get(ExceptionsFilter));
   await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

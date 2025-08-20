@@ -1,6 +1,8 @@
 import { RedisModule } from '@nestjs-modules/ioredis/dist/redis.module';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APILoggerModule } from './api-logger/api-logger.module';
+import { RequestIdMiddleware } from './api-logger/request-id.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GatewayModule } from './gateway/gateway.module';
@@ -20,6 +22,7 @@ import { RaceModule } from './race/race.module';
       type: 'single',
       url: process.env.REDIS_URL || 'redis://localhost:6379',
     }),
+    APILoggerModule,
     KafkaModule,
     RaceModule,
     GatewayModule,
@@ -27,4 +30,8 @@ import { RaceModule } from './race/race.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

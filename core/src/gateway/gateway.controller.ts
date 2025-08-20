@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { BettingService } from 'src/betting/betting.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
 import { HorseService } from 'src/race/horse.service';
@@ -14,6 +14,16 @@ export class GatewayController {
     private readonly raceService: RaceService,
     private readonly raceResultService: RaceResultService,
   ) {}
+
+  @Get('health-error')
+  getHealthError() {
+    throw new Error('Health check failed');
+  }
+
+  @Post('health-error')
+  postHealthError() {
+    throw new Error('Health check failed');
+  }
 
   @Get('race/latest')
   getLatestRace() {
