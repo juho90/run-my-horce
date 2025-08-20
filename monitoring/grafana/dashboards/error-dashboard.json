@@ -1,0 +1,46 @@
+{
+  "id": null,
+  "title": "Error Monitoring",
+  "tags": ["errors"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Error Rate",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "rate(app_errors_total[5m])",
+          "legendFormat": "Errors/sec"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "title": "Errors by Type",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "sum by (error_type) (app_errors_total)",
+          "legendFormat": "{{error_type}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "id": 3,
+      "title": "Recent Errors",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "increase(app_errors_total[1h])",
+          "legendFormat": "{{endpoint}} - {{error_type}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 }
+    }
+  ],
+  "time": { "from": "now-1h", "to": "now" },
+  "refresh": "30s"
+}
