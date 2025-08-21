@@ -1,0 +1,27 @@
+groups:
+  - name: http_performance
+    interval: 30s
+    rules:
+      - record: http:avg_response_time_by_path
+        expr: sum by (path) (rate(http_server_duration_seconds_sum[5m])) / sum by (path) (rate(http_server_duration_seconds_count[5m]))
+
+      - record: http:avg_response_time_by_method_path
+        expr: sum by (method, path) (rate(http_server_duration_seconds_sum[5m])) / sum by (method, path) (rate(http_server_duration_seconds_count[5m]))
+
+      - record: http:p95_response_time_by_method_path
+        expr: histogram_quantile(0.95, sum by (method, path) (rate(http_server_duration_seconds_bucket[5m])))
+
+      - record: http:p99_response_time_global
+        expr: histogram_quantile(0.99, sum(rate(http_server_duration_seconds_bucket[5m])))
+
+      - record: http:p50_response_time_global
+        expr: histogram_quantile(0.50, sum(rate(http_server_duration_seconds_bucket[5m])))
+
+      - record: http:p95_response_time_global
+        expr: histogram_quantile(0.95, sum(rate(http_server_duration_seconds_bucket[5m])))
+
+      - record: http:request_rate_by_path
+        expr: sum by (path) (rate(http_server_requests_total[1m]))
+
+      - record: http:slow_requests_count
+        expr: sum(increase(http_server_duration_seconds_bucket{le="+Inf"}[5m]) - increase(http_server_duration_seconds_bucket{le="0.05"}[5m]))

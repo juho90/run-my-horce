@@ -1,0 +1,145 @@
+{
+  "id": null,
+  "title": "Optimized Slow API Monitoring",
+  "tags": ["performance", "api"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Slowest APIs (95th Percentile)",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "sort_desc(http:p95_response_time_by_method_path)",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "color-background",
+            "filterable": false
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.02 },
+              { "color": "red", "value": 0.1 }
+            ]
+          },
+          "unit": "s",
+          "decimals": 3
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Top 10 Slowest APIs",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "topk(10, http:avg_response_time_by_method_path)",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "displayMode": "gradient-gauge",
+            "filterable": false
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.02 },
+              { "color": "red", "value": 0.1 }
+            ]
+          },
+          "unit": "s",
+          "decimals": 3
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "API Calls per Second",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "http:request_rate_by_path",
+          "legendFormat": "{{path}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Slow Requests (>50ms) Count",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "http:slow_requests_count",
+          "legendFormat": "Slow Requests",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Response Time Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "http:p50_response_time_global",
+          "legendFormat": "50th percentile",
+          "refId": "A"
+        },
+        {
+          "expr": "http:p95_response_time_global",
+          "legendFormat": "95th percentile",
+          "refId": "B"
+        },
+        {
+          "expr": "http:p99_response_time_global",
+          "legendFormat": "99th percentile",
+          "refId": "C"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 26 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    }
+  ],
+  "time": { "from": "now-1h", "to": "now" },
+  "refresh": "30s"
+}

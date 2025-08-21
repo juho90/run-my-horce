@@ -3,6 +3,8 @@
   "title": "Error Monitoring",
   "tags": ["errors"],
   "timezone": "browser",
+  "schemaVersion": 30,
+  "version": 1,
   "panels": [
     {
       "id": 1,
@@ -10,11 +12,24 @@
       "type": "stat",
       "targets": [
         {
-          "expr": "rate(app_errors_total[5m])",
-          "legendFormat": "Errors/sec"
+          "expr": "rate(http_server_errors_total[5m])",
+          "legendFormat": "Errors/sec",
+          "refId": "A"
         }
       ],
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.1 }
+            ]
+          }
+        }
+      }
     },
     {
       "id": 2,
@@ -22,23 +37,64 @@
       "type": "piechart",
       "targets": [
         {
-          "expr": "sum by (error_type) (app_errors_total)",
-          "legendFormat": "{{error_type}}"
+          "expr": "sum by (name) (http_server_errors_total)",
+          "legendFormat": "{{name}}",
+          "refId": "A"
         }
       ],
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
     },
     {
       "id": 3,
-      "title": "Recent Errors",
+      "title": "Errors by Endpoint",
       "type": "table",
       "targets": [
         {
-          "expr": "increase(app_errors_total[1h])",
-          "legendFormat": "{{endpoint}} - {{error_type}}"
+          "expr": "increase(http_server_errors_total[1h])",
+          "legendFormat": "{{method}} {{path}} - {{name}}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
         }
       ],
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 }
+    },
+    {
+      "id": 4,
+      "title": "Error Count by Status Code",
+      "type": "bargauge",
+      "targets": [
+        {
+          "expr": "sum by (status) (http_server_errors_total)",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "yellow", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Error Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(http_server_errors_total[1m])",
+          "legendFormat": "{{path}} - {{name}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
     }
   ],
   "time": { "from": "now-1h", "to": "now" },
