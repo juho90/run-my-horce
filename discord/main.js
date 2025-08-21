@@ -1,8 +1,8 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
-import { producer } from "./kafka-producer.js";
-import { KAFKA_TOPICS } from "./kafka-topic.js";
+import { producer } from "./kafka.producer.js";
+import { KAFKA_TOPICS } from "./kafka.topic.js";
 import { logMessageSummaryAsync } from "./logMessageSummary.js";
 
 dotenv.config();
@@ -49,10 +49,10 @@ client.on("interactionCreate", async (interaction) => {
     setTimeout(async () => {
       const res = await fetch(`${CORE_API}/race/latest`);
       const race = await res.json();
-      if (race && race.id) {
+      if (race && race.raceId) {
         await logMessageSummaryAsync(
           interaction.editReply(
-            `레이스가 시작되었습니다! ID: ${race.id}, 상태: ${race.state}`
+            `레이스가 시작되었습니다! ID: ${race.raceId}, 상태: ${race.state}`
           )
         );
       } else {
@@ -65,9 +65,9 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName === "raceinfo") {
     const res = await fetch(`${CORE_API}/race/latest`);
     const race = await res.json();
-    if (race && race.id) {
+    if (race && race.raceId) {
       await interaction.reply(
-        `현재 레이스 ID: ${race.id}, 상태: ${race.state}`
+        `현재 레이스 ID: ${race.raceId}, 상태: ${race.state}`
       );
     } else {
       await interaction.reply("진행 중인 레이스가 없습니다.");
