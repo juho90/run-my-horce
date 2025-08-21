@@ -76,6 +76,7 @@ services:
       KAFKA_BROKER: kafka:29092
       REDIS_URL: redis://redis:6379
       HTML_FILE_PATH: ./dist/race/
+      PUBLIC_URL: http://localhost:8000
     depends_on:
       - kafka
 

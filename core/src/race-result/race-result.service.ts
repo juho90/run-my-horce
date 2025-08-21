@@ -79,7 +79,7 @@ export class RaceResultService {
     if (!fs.existsSync(filePath)) {
       return null;
     }
-    return `http://localhost:28000/race/race-${raceId}.html`;
+    return `${process.env.PUBLIC_URL}/race/race-${raceId}.html`;
   }
 
   private async generateRaceHTML(
