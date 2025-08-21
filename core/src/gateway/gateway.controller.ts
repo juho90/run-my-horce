@@ -60,6 +60,21 @@ export class GatewayController {
     return this.horseService.findHorseAllByRaceId(raceId);
   }
 
+  @Get('horses/latest')
+  @ApiOperation({ summary: 'Get latest horse information' })
+  @ApiResponse({
+    status: 200,
+    description: 'Latest horse data or empty object',
+  })
+  async getLatestHorse() {
+    const race = await this.raceService.findLatestRace();
+    if (!race) {
+      return {};
+    }
+    const horses = await this.horseService.findHorseAllByRaceId(race.raceId);
+    return horses || {};
+  }
+
   @Get('track/:raceId')
   @ApiOperation({ summary: 'Get track configuration by race ID' })
   @ApiParam({ name: 'raceId', description: 'Race ID', type: 'number' })
