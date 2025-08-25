@@ -1,6 +1,7 @@
 import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BettingService } from 'src/betting/betting.service';
+import { InventoryService } from 'src/inventory/inventory.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
 import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
@@ -10,11 +11,12 @@ import { TrackService } from 'src/race/track.service';
 @Controller('api')
 export class GatewayController {
   constructor(
-    private readonly bettingService: BettingService,
+    private readonly inventoryService: InventoryService,
     private readonly horseService: HorseService,
     private readonly trackService: TrackService,
     private readonly raceService: RaceService,
     private readonly raceResultService: RaceResultService,
+    private readonly bettingService: BettingService,
   ) {}
 
   @Get('health-error')
