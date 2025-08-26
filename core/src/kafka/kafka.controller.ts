@@ -1,8 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { BettingService } from 'src/betting/betting.service';
-import { ITEM_IDS } from 'src/inventory/inventory.constants';
-import { InventoryService } from 'src/inventory/inventory.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
 import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
@@ -17,7 +15,6 @@ export class KafkaController {
     private readonly trackService: TrackService,
     private readonly horseService: HorseService,
     private readonly bettingService: BettingService,
-    private readonly inventoryService: InventoryService,
     private readonly raceResultService: RaceResultService,
   ) {}
 
@@ -78,13 +75,6 @@ export class KafkaController {
 
   @MessagePattern(KafkaTopics.CREATE_BET)
   async handleCreateBet(@Payload() message: Betting) {
-    if (message.discordId.startsWith('user')) {
-      await this.inventoryService.addItem(
-        message.discordId,
-        ITEM_IDS.COIN,
-        message.amount,
-      );
-    }
     return await this.bettingService.placeBet(message);
   }
 }

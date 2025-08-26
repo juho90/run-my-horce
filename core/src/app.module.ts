@@ -8,7 +8,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GatewayModule } from './gateway/gateway.module';
 import { KafkaModule } from './kafka/kafka.module';
-import { RaceModule } from './race/race.module';
 
 @Module({
   imports: [
@@ -26,7 +25,6 @@ import { RaceModule } from './race/race.module';
     APILoggerModule,
     SwaggerModule,
     KafkaModule,
-    RaceModule,
     GatewayModule,
   ],
   controllers: [AppController],

@@ -35,7 +35,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api-docs', app, document);
   app.enableCors();
   app.useStaticAssets(join(__dirname, '..', 'race'), {
     prefix: '/race/',
@@ -45,6 +45,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   Logger.log(`Server running on http://localhost:${port}`);
-  Logger.log(`Swagger documentation available at http://localhost:${port}/api`);
+  Logger.log(
+    `Swagger documentation available at http://localhost:${port}/api-docs`,
+  );
 }
 bootstrap();
