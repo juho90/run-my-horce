@@ -12,88 +12,80 @@ export class InventoryService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAllByUser(discordId: string): Promise<InventoryEntity[]> {
-    return this.repo.find({ where: { discordId } });
+  async findAllByUser(userId: string): Promise<InventoryEntity[]> {
+    return this.repo.find({ where: { userId } });
   }
 
   async findOne(
-    discordId: string,
+    userId: string,
     itemId: string,
   ): Promise<InventoryEntity | null> {
-    return this.repo.findOne({ where: { discordId, itemId } });
+    return this.repo.findOne({ where: { userId, itemId } });
   }
 
-  async addItem(
-    discordId: string,
-    itemId: string,
-    amount: number,
-  ): Promise<void> {
+  async addItem(userId: string, itemId: string, amount: number): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(InventoryEntity);
-      this.addItemRepo(discordId, itemId, amount, repo);
+      this.addItemRepo(userId, itemId, amount, repo);
     });
   }
 
   async addItemRepo(
-    discordId: string,
+    userId: string,
     itemId: string,
     amount: number,
     repo: Repository<InventoryEntity>,
   ): Promise<void> {
-    const query = this.addItemQuery_SQLite(discordId, itemId, amount);
+    const query = this.addItemQuery_SQLite(userId, itemId, amount);
     await repo.query(query);
   }
 
   private addItemQuery_SQLite(
-    discordId: string,
+    userId: string,
     itemId: string,
     amount: number,
   ): string {
     return `
-      INSERT INTO inventories (discordId, itemId, quantity)
-      VALUES (${discordId}, ${itemId}, ${amount})
-      ON CONFLICT (discordId, itemId)
+      INSERT INTO inventories (userId, itemId, quantity)
+      VALUES (${userId}, ${itemId}, ${amount})
+      ON CONFLICT (userId, itemId)
       DO UPDATE SET quantity = quantity + ${amount}
     `;
   }
 
   private addItemQuery_MSSQL(
-    discordId: string,
+    userId: string,
     itemId: string,
     amount: number,
   ): string {
     return `
       MERGE inventories AS T
       USING (
-        VALUES(${discordId}, ${itemId}, ${amount})
-      ) AS S (discordId, itemId, quantity)
-      ON T.discordId = S.discordId AND T.itemId = S.itemId
+        VALUES(${userId}, ${itemId}, ${amount})
+      ) AS S (userId, itemId, quantity)
+      ON T.userId = S.userId AND T.itemId = S.itemId
       WHEN MATCHED THEN
         UPDATE SET T.quantity = T.quantity + S.quantity
       WHEN NOT MATCHED BY TARGET THEN
-        INSERT (discordId, itemId, quantity)
-        VALUES (S.discordId, S.itemId, S.quantity)
+        INSERT (userId, itemId, quantity)
+        VALUES (S.userId, S.itemId, S.quantity)
     `;
   }
 
-  async subItem(
-    discordId: string,
-    itemId: string,
-    amount: number,
-  ): Promise<void> {
+  async subItem(userId: string, itemId: string, amount: number): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(InventoryEntity);
-      await this.subItemRepo(discordId, itemId, amount, repo);
+      await this.subItemRepo(userId, itemId, amount, repo);
     });
   }
 
   async subItemRepo(
-    discordId: string,
+    userId: string,
     itemId: string,
     amount: number,
     repo: Repository<InventoryEntity>,
   ): Promise<void> {
-    const existing = await repo.findOne({ where: { discordId, itemId } });
+    const existing = await repo.findOne({ where: { userId, itemId } });
     if (!existing || existing.quantity < amount) {
       throw new Error(`Not enough quantity of item: ${itemId}`);
     }
@@ -101,10 +93,10 @@ export class InventoryService {
       .createQueryBuilder()
       .update()
       .set({ quantity: () => `quantity - ${amount}` })
-      .where('discordId = :discordId', { discordId })
+      .where('userId = :userId', { userId })
       .andWhere('itemId = :itemId', { itemId })
       .andWhere('quantity >= :amount', { amount })
-      .setParameters({ discordId, itemId, amount })
+      .setParameters({ userId, itemId, amount })
       .execute();
   }
 }

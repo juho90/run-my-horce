@@ -24,8 +24,8 @@ export class JwtMiddleware implements NestMiddleware {
     }
     try {
       const decoded = this.jwtService.verifyToken(token);
-      req['x-email'] = decoded.email;
-      req['x-sub'] = decoded.sub;
+      req.headers['x-email'] = decoded.email;
+      req.headers['x-user-id'] = decoded.sub;
       next();
     } catch (err) {
       throw new UnauthorizedException(

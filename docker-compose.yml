@@ -45,7 +45,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
-      - "3030:3000"
+      - "5050:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin123
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -72,11 +72,29 @@ services:
     ports:
       - "8000:3000"
     environment:
-      KAFKA_CLIENT_ID: horse-core
+      KAFKA_GROUP_ID: core-group
+      KAFKA_CLIENT_ID: core-client
       KAFKA_BROKER: kafka:29092
       REDIS_URL: redis://redis:6379
       HTML_FILE_PATH: ./dist/race/
       PUBLIC_URL: http://localhost:8000
+    depends_on:
+      - kafka
+
+  horse-user:
+    build:
+      context: ./user
+    container_name: horse-user
+    ports:
+      - "8100:3000"
+    environment:
+      JWT_SECRET: super-secret-change-me
+      JWT_ISSUER: run-my-horce
+      JWT_AUDIENCE: run-my-horce-clients
+      JWT_ALG: HS256
+      KAFKA_GROUP_ID: user-group
+      KAFKA_CLIENT_ID: user-client
+      KAFKA_BROKER: kafka:29092
     depends_on:
       - kafka
 

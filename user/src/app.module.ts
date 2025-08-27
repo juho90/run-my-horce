@@ -1,5 +1,4 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { SwaggerModule } from '@nestjs/swagger';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APILoggerModule } from './api-logger/api-logger.module';
 import { AppController } from './app.controller';
@@ -18,7 +17,6 @@ import { JwtMiddleware } from './middlewares/jwt.middleware';
       logging: true,
     }),
     APILoggerModule,
-    SwaggerModule,
     GatewayModule,
   ],
   controllers: [AppController],

@@ -3,7 +3,7 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity('inventories')
 export class InventoryEntity {
   @PrimaryColumn()
-  discordId: string;
+  userId: string;
 
   @PrimaryColumn()
   itemId: string;
