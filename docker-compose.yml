@@ -7,6 +7,7 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -21,6 +22,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: unless-stopped
     depends_on:
       - zookeeper
 
@@ -40,6 +42,7 @@ services:
       - "--web.console.templates=/etc/prometheus/consoles"
       - "--storage.tsdb.retention.time=200h"
       - "--web.enable-lifecycle"
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -53,6 +56,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    restart: unless-stopped
     depends_on:
       - prometheus
 
@@ -64,6 +68,7 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+    restart: unless-stopped
 
   horse-core:
     build:
@@ -78,6 +83,7 @@ services:
       REDIS_URL: redis://redis:6379
       HTML_FILE_PATH: ./dist/race/
       PUBLIC_URL: http://localhost:8000
+    restart: unless-stopped
     depends_on:
       - kafka
 
@@ -95,6 +101,7 @@ services:
       KAFKA_GROUP_ID: user-group
       KAFKA_CLIENT_ID: user-client
       KAFKA_BROKER: kafka:29092
+    restart: unless-stopped
     depends_on:
       - kafka
 
@@ -108,6 +115,7 @@ services:
       KAFKA_CLIENT_ID: horse-admin
       KAFKA_BROKER: kafka:29092
       CORE_API: http://horse-core:3000/api
+    restart: unless-stopped
     depends_on:
       - horse-core
 

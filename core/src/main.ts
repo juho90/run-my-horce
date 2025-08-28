@@ -13,6 +13,8 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const metrics = app.get(MetricsInterceptor);
+  const exceptions = app.get(ExceptionsFilter);
   const kafkaApp = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
     options: {
@@ -25,9 +27,14 @@ async function bootstrap() {
       },
     },
   });
-  kafkaApp.useGlobalInterceptors(app.get(MetricsInterceptor));
-  kafkaApp.useGlobalFilters(app.get(ExceptionsFilter));
-  await kafkaApp.listen();
+  kafkaApp.useGlobalInterceptors(metrics);
+  kafkaApp.useGlobalFilters(exceptions);
+  try {
+    await kafkaApp.listen();
+  } catch (error) {
+    console.error(`Failed to start Kafka microservice: ${error.message}`);
+    process.exit(1);
+  }
   Logger.log('Horse Core HTTP + Kafka Microservice is running');
   const config = new DocumentBuilder()
     .setTitle('Horse Racing Core API')
@@ -40,10 +47,15 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'race'), {
     prefix: '/race/',
   });
-  app.useGlobalInterceptors(app.get(MetricsInterceptor));
-  app.useGlobalFilters(app.get(ExceptionsFilter));
+  app.useGlobalInterceptors(metrics);
+  app.useGlobalFilters(exceptions);
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  try {
+    await app.listen(port);
+  } catch (error) {
+    console.error(`Failed to start HTTP server: ${error.message}`);
+    process.exit(1);
+  }
   Logger.log(`Server running on http://localhost:${port}`);
   Logger.log(
     `Swagger documentation available at http://localhost:${port}/api-docs`,
