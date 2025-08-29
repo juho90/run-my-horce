@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { raceId } = await params;
-    const res = await fetch(`${CORE_API}/horses/${raceId}`);
+    const res = await fetch(`${CORE_API}/horse/${raceId}`);
     const data = await res.json();
     return NextResponse.json(data);
   } catch (e) {

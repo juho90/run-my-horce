@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { BettingService } from 'src/betting/betting.service';
+import { HorseService } from 'src/horse/horse.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
-import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
 import { TrackService } from 'src/race/track.service';
 import { Betting, RaceHorse, RaceLog, RaceResult } from './kafka.interface';

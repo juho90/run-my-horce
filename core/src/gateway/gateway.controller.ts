@@ -1,8 +1,8 @@
 import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BettingService } from 'src/betting/betting.service';
+import { HorseService } from 'src/horse/horse.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
-import { HorseService } from 'src/race/horse.service';
 import { RaceService } from 'src/race/race.service';
 import { TrackService } from 'src/race/track.service';
 
@@ -37,30 +37,14 @@ export class GatewayController {
     throw new Error('Health check failed');
   }
 
-  @Get('race/latest')
-  @ApiOperation({ summary: 'Get latest race information' })
-  @ApiResponse({ status: 200, description: 'Latest race data or empty object' })
-  getLatestRace() {
-    return this.raceService.findLatestRace() || {};
-  }
-
   @Get('horses')
   @ApiOperation({ summary: 'Get all horses' })
   @ApiResponse({ status: 200, description: 'List of all horses' })
-  findAllHorses() {
+  findHorseAll() {
     return this.horseService.findHorseAll();
   }
 
-  @Get('horses/:raceId')
-  @ApiOperation({ summary: 'Get horses by race ID' })
-  @ApiParam({ name: 'raceId', description: 'Race ID', type: 'number' })
-  @ApiResponse({ status: 200, description: 'List of horses for the race' })
-  @ApiResponse({ status: 404, description: 'Race not found' })
-  findAllHorsesByRaceId(@Param('raceId', ParseIntPipe) raceId: number) {
-    return this.horseService.findHorseAllByRaceId(raceId);
-  }
-
-  @Get('horses/latest')
+  @Get('horse/latest')
   @ApiOperation({ summary: 'Get latest horse information' })
   @ApiResponse({
     status: 200,
@@ -71,8 +55,17 @@ export class GatewayController {
     if (!race) {
       return {};
     }
-    const horses = await this.horseService.findHorseAllByRaceId(race.raceId);
+    const horses = await this.horseService.findHorses(race.raceId);
     return horses || {};
+  }
+
+  @Get('horse/:raceId')
+  @ApiOperation({ summary: 'Get horses by race ID' })
+  @ApiParam({ name: 'raceId', description: 'Race ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'List of horses for the race' })
+  @ApiResponse({ status: 404, description: 'Race not found' })
+  findAHorses(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.horseService.findHorses(raceId);
   }
 
   @Get('track/:raceId')
@@ -82,6 +75,28 @@ export class GatewayController {
   @ApiResponse({ status: 404, description: 'Track not found' })
   findTrackByRaceId(@Param('raceId', ParseIntPipe) raceId: number) {
     return this.trackService.findTrack(raceId);
+  }
+
+  @Get('races')
+  @ApiOperation({ summary: 'Get all horses' })
+  @ApiResponse({ status: 200, description: 'List of all horses' })
+  findRaceAll() {
+    return this.raceService.findRaceAll();
+  }
+
+  @Get('race/latest')
+  @ApiOperation({ summary: 'Get latest race information' })
+  @ApiResponse({ status: 200, description: 'Latest race data or empty object' })
+  getLatestRace() {
+    return this.raceService.findLatestRace() || {};
+  }
+
+  @Get('race/:raceId')
+  @ApiOperation({ summary: 'Get race information by ID' })
+  @ApiParam({ name: 'raceId', description: 'Race ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Race data or empty object' })
+  getRace(@Param('raceId', ParseIntPipe) raceId: number) {
+    return this.raceService.findRace(raceId) || {};
   }
 
   @Get('race-log/:raceId')

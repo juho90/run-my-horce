@@ -1,4 +1,4 @@
-import { HorseEntity } from 'src/race/entities/horse.entity';
+import { HorseEntity } from 'src/horse/entities/horse.entity';
 
 export interface Horse {
   name: string;

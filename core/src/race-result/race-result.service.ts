@@ -10,15 +10,10 @@ import { generateRaceWebGLHtml, RaceLog } from 'engine/src/raceViewer';
 import * as fs from 'fs';
 import { Redis } from 'ioredis';
 import { join } from 'path';
-import { HorseService } from 'src/race/horse.service';
+import { HorseService } from 'src/horse/horse.service';
 import { TrackService } from 'src/race/track.service';
 import { Repository } from 'typeorm';
-import { promisify } from 'util';
-import * as zlib from 'zlib';
 import { RaceResultEntity } from './entities/race-result.entity';
-
-const gzip = promisify(zlib.gzip);
-const gunzip = promisify(zlib.gunzip);
 
 @Injectable()
 export class RaceResultService {
@@ -32,7 +27,7 @@ export class RaceResultService {
   ) {}
 
   async createRace(raceId: number): Promise<void> {
-    const horses = await this.horseService.findHorseAllByRaceId(raceId);
+    const horses = await this.horseService.findHorses(raceId);
     if (horses.length === 0) {
       throw new Error(`Not found horses for race ${raceId}`);
     }

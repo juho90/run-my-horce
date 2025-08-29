@@ -11,6 +11,14 @@ export class HorseService {
     private readonly horseRepo: Repository<HorseEntity>,
   ) {}
 
+  async findHorseAll(): Promise<HorseEntity[]> {
+    return this.horseRepo.find();
+  }
+
+  async findHorses(raceId: number): Promise<HorseEntity[]> {
+    return this.horseRepo.find({ where: { raceId } });
+  }
+
   async createHorses(raceId: number): Promise<HorseEntity[]> {
     const horses = new Array<HorseEntity>(10);
     for (let index = 0; index < horses.length; index++) {
@@ -35,13 +43,5 @@ export class HorseService {
       const horseEntity = this.horseRepo.create(horse);
       return this.horseRepo.save(horseEntity);
     }
-  }
-
-  async findHorseAll(): Promise<HorseEntity[]> {
-    return this.horseRepo.find();
-  }
-
-  async findHorseAllByRaceId(raceId: number): Promise<HorseEntity[]> {
-    return this.horseRepo.find({ where: { raceId } });
   }
 }

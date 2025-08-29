@@ -10,6 +10,16 @@ export class RaceService {
     private readonly raceRepo: Repository<RaceEntity>,
   ) {}
 
+  async findRaceAll(): Promise<RaceEntity[]> {
+    return this.raceRepo.find();
+  }
+
+  async findRace(raceId: number): Promise<RaceEntity | null> {
+    return this.raceRepo.findOne({
+      where: { raceId },
+    });
+  }
+
   async findLatestRace(): Promise<RaceEntity | null> {
     return this.raceRepo.findOne({
       where: {},
