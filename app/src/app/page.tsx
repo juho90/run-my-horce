@@ -1,7 +1,7 @@
 "use client";
 
+import RaceCard from "@/components/RaceCard";
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Race = {
@@ -14,16 +14,13 @@ type Race = {
   updatedAt: string;
 };
 
-function fmt(dt?: string | null) {
-  if (!dt) {
-    return "-";
-  }
-  const d = new Date(dt);
-  return d.toLocaleString();
-}
-
 export default function Home() {
   const [race, setRace] = useState<Race | null>(null);
+  const [races, setRaces] = useState<Race[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const itemsPerPage = 10;
 
   const fetchLatestRace = async () => {
     const res = await fetch("/api/race/latest", { cache: "no-store" });
@@ -36,8 +33,33 @@ export default function Home() {
     }
   };
 
+  const fetchRaces = async (page: number) => {
+    setLoading(true);
+    const offset = (page - 1) * itemsPerPage;
+    const res = await fetch(
+      `/api/races?offset=${offset}&count=${itemsPerPage}`,
+      { cache: "no-store" }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data.races && Array.isArray(data.races)) {
+        setRaces(data.races as Race[]);
+        setTotalCount(data.total || 0);
+      }
+    }
+    setLoading(false);
+  };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchRaces(page);
+  };
+
   useEffect(() => {
     fetchLatestRace();
+    fetchRaces(1);
   }, []);
 
   return (
@@ -54,49 +76,73 @@ export default function Home() {
         <h1 className="text-2xl font-semibold tracking-tight">Latest Race</h1>
       </header>
 
-      <section className="rounded-lg border border-black/10 dark:border-white/15 p-5 bg-white dark:bg-black/20 shadow-sm max-w-xl">
-        {race ? (
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="font-medium">Race ID</span>
-              <span>
-                <Link
-                  href={`/race/${race.raceId}`}
-                  className="text-blue-600 dark:text-blue-400 underline"
-                >
-                  {race.raceId}
-                </Link>
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">State</span>
-              <span className="uppercase tracking-wide">{race.state}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Started</span>
-              <span>{fmt(race.startedAt)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Stopped</span>
-              <span>{fmt(race.stoppedAt)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Settled</span>
-              <span>{race.settled ? "Yes" : "No"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Created</span>
-              <span>{fmt(race.createdAt)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Updated</span>
-              <span>{fmt(race.updatedAt)}</span>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            No race data.
+      <RaceCard race={race} />
+
+      <section className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold tracking-tight">All Races</h2>
+          <p className="text-sm text-black/60 dark:text-white/50">
+            Total: {totalCount} races
           </p>
+        </div>
+
+        {loading ? (
+          <p className="text-sm text-black/60 dark:text-white/50">
+            Loading races...
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {races.map((raceItem) => (
+              <RaceCard key={raceItem.raceId} race={raceItem} />
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              Previous
+            </button>
+
+            <div className="flex gap-1">
+              {(() => {
+                const startPage = Math.max(1, currentPage - 2);
+                const endPage = Math.min(totalPages, startPage + 4);
+                const adjustedStartPage = Math.max(1, endPage - 4);
+
+                const pages = [];
+                for (let i = adjustedStartPage; i <= endPage; i++) {
+                  pages.push(i);
+                }
+
+                return pages.map((pageNum) => (
+                  <button
+                    key={`page-${pageNum}`}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1 text-sm border rounded ${
+                      currentPage === pageNum
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "hover:bg-black/5 dark:hover:bg-white/10"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ));
+              })()}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              Next
+            </button>
+          </div>
         )}
       </section>
     </div>

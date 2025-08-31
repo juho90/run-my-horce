@@ -1,5 +1,18 @@
-import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { BettingService } from 'src/betting/betting.service';
 import { HorseService } from 'src/horse/horse.service';
 import { RaceResultService } from 'src/race-result/race-result.service';
@@ -77,11 +90,43 @@ export class GatewayController {
     return this.trackService.findTrack(raceId);
   }
 
+  @Get('races-count')
+  @ApiOperation({ summary: 'Get total number of races' })
+  @ApiResponse({ status: 200, description: 'Total number of races' })
+  getRacesCount() {
+    return this.raceService.getRaceCount();
+  }
+
   @Get('races')
-  @ApiOperation({ summary: 'Get all horses' })
-  @ApiResponse({ status: 200, description: 'List of all horses' })
-  findRaceAll() {
-    return this.raceService.findRaceAll();
+  @ApiOperation({ summary: 'Get all races with pagination' })
+  @ApiQuery({
+    name: 'offset',
+    required: true,
+    type: Number,
+    default: 0,
+    description: 'Offset for pagination (default: 0)',
+  })
+  @ApiQuery({
+    name: 'count',
+    required: true,
+    type: Number,
+    default: 10,
+    description: 'Number of items to return (default: 10)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of races',
+  })
+  async findRaceAll(
+    @Query('offset', ParseIntPipe) offset: number = 0,
+    @Query('count', ParseIntPipe) count: number = 10,
+  ) {
+    const offsetNum = Math.max(0, offset);
+    const countNum = Math.min(50, Math.max(1, count));
+    return await this.raceService.findRaceAllWithPagination(
+      offsetNum,
+      countNum,
+    );
   }
 
   @Get('race/latest')

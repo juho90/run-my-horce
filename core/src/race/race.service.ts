@@ -10,8 +10,20 @@ export class RaceService {
     private readonly raceRepo: Repository<RaceEntity>,
   ) {}
 
-  async findRaceAll(): Promise<RaceEntity[]> {
-    return this.raceRepo.find();
+  async getRaceCount(): Promise<number> {
+    return this.raceRepo.count();
+  }
+
+  async findRaceAllWithPagination(
+    offset: number,
+    count: number,
+  ): Promise<RaceEntity[]> {
+    const [data, _] = await this.raceRepo.findAndCount({
+      skip: offset,
+      take: count,
+      order: { raceId: 'DESC' },
+    });
+    return data;
   }
 
   async findRace(raceId: number): Promise<RaceEntity | null> {
